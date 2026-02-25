@@ -56,7 +56,19 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            return Ok(account);
+            var accountDto = new AccountListDTO
+            {
+                AccountNumber = account.AccountNumber,
+                Balance = account.Balance,
+                RemainingBalance = account.RemainingBalance,
+                IBAN = account.IBAN,
+                CurrencyCode = account.CurrencyCode,
+                AccountStatus = account.AccountStatus,
+                LastTransactionDate = account.LastTransactionDate,
+                AccountType = account.AccountType
+            };
+
+            return Ok(accountDto);
         }
         [HttpPost]
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
