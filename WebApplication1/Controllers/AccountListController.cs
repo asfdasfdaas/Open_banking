@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -20,7 +21,7 @@ namespace WebApplication1.Controllers
             _db = db;
         }
         [HttpGet] //api/AccountList
-        public async Task<ActionResult<IEnumerable<AccountList>>> GetAll()
+        public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             //unused code just in case
             //
@@ -48,7 +49,7 @@ namespace WebApplication1.Controllers
 
         }
         [HttpGet("{id}")] //api/AccountList/{id}
-        public async Task<ActionResult<AccountList>> GetById(int id)
+        public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
             var account = await _db.AccountLists.FindAsync(id);
             if (account == null)
@@ -57,7 +58,69 @@ namespace WebApplication1.Controllers
             }
             return Ok(account);
         }
-        //[HttpPost]
-        //public async Task<>
+        [HttpPost]
+        public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
+        {
+            var newAccount = new AccountList
+            {
+                AccountNumber = createDTO.AccountNumber,
+                IBAN = createDTO.IBAN,
+                CurrencyCode = createDTO.CurrencyCode,
+                AccountType = createDTO.AccountType,
+
+                Balance = 0,
+                RemainingBalance = 0,
+                AccountStatus = "A",
+                LastTransactionDate = DateTime.Now
+            };
+            _db.AccountLists.Add(newAccount);
+            await _db.SaveChangesAsync();
+
+            var responseDto = new AccountListDTO
+            {
+                AccountNumber = newAccount.AccountNumber,
+                Balance = newAccount.Balance,
+                RemainingBalance = newAccount.RemainingBalance,
+                IBAN = newAccount.IBAN,
+                CurrencyCode = newAccount.CurrencyCode,
+                AccountStatus = newAccount.AccountStatus,
+                LastTransactionDate = newAccount.LastTransactionDate,
+                AccountType = newAccount.AccountType
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = newAccount.Id }, responseDto);
+
+        }
+        [HttpPut("{id}")]
+        public async Task<ActionResult<AccountListDTO>> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
+        {
+            var Account = await _db.AccountLists.FindAsync(id);
+
+            if (Account == null)
+            {
+                return NotFound();
+            }
+
+            Account.CurrencyCode = updateDTO.CurrencyCode;
+            Account.AccountStatus = updateDTO.AccountStatus;
+            Account.AccountType = updateDTO.AccountType;
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
+        { 
+            var Account = await _db.AccountLists.FindAsync(id);
+
+            if (Account == null)
+            {
+                return NotFound();
+            }
+            _db.AccountLists.Remove(Account);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }
