@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 namespace WebApplication1.Controllers
 {
     [ApiController]
@@ -18,7 +19,7 @@ namespace WebApplication1.Controllers
         {
             _db = db;
         }
-        [HttpGet]
+        [HttpGet] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountList>>> GetAll()
         {
             //unused code just in case
@@ -30,9 +31,33 @@ namespace WebApplication1.Controllers
 
             var accounts = await _db.AccountLists.ToListAsync();
 
-            return Ok(accounts);
+            var accountDtos = accounts.Select(a => new AccountListDTO
+            {
+                AccountNumber = a.AccountNumber,
+                Balance = a.Balance,
+                RemainingBalance = a.RemainingBalance,
+                IBAN = a.IBAN,
+                CurrencyCode = a.CurrencyCode,
+                AccountStatus = a.AccountStatus,
+                LastTransactionDate = a.LastTransactionDate,
+                AccountType = a.AccountType
+            }).ToList();
 
-            
+            return Ok(accountDtos);
+
+
         }
+        [HttpGet("{id}")] //api/AccountList/{id}
+        public async Task<ActionResult<AccountList>> GetById(int id)
+        {
+            var account = await _db.AccountLists.FindAsync(id);
+            if (account == null)
+            {
+                return NotFound();
+            }
+            return Ok(account);
+        }
+        //[HttpPost]
+        //public async Task<>
     }
 }
