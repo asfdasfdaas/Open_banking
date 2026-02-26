@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using WebApplication1.Data;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 namespace WebApplication1.Controllers
@@ -14,23 +15,16 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class AccountListController : ControllerBase
     {
-        private readonly ApplicationDBContext _db;
+        private readonly IAccountRepository _repo; // Changed from DBContext
 
-        public AccountListController(ApplicationDBContext db)
+        public AccountListController(IAccountRepository repo)
         {
-            _db = db;
+            _repo = repo;
         }
         [HttpGet] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
-            //unused code just in case
-            //
-            //return await _db.AccountLists.ToListAsync();
-
-            //var accountLists = _db.AccountLists.ToList();
-            //return Ok(accountLists);
-
-            var accounts = await _db.AccountLists.ToListAsync();
+            var accounts = await _repo.GetAllAsync();
 
             var accountDtos = accounts.Select(a => new AccountListDTO
             {
@@ -51,7 +45,7 @@ namespace WebApplication1.Controllers
         [HttpGet("{id}")] //api/AccountList/{id}
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
-            var account = await _db.AccountLists.FindAsync(id);
+            var account = await _repo.GetByIdAsync(id);
             if (account == null)
             {
                 return NotFound();
@@ -85,8 +79,7 @@ namespace WebApplication1.Controllers
                 AccountStatus = "A",
                 LastTransactionDate = DateTime.Now
             };
-            _db.AccountLists.Add(newAccount);
-            await _db.SaveChangesAsync();
+            await _repo.CreateAsync(newAccount);
 
             var responseDto = new AccountListDTO
             {
@@ -106,7 +99,7 @@ namespace WebApplication1.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<AccountListDTO>> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
-            var Account = await _db.AccountLists.FindAsync(id);
+            var Account = await _repo.GetByIdAsync(id);
 
             if (Account == null)
             {
@@ -117,21 +110,20 @@ namespace WebApplication1.Controllers
             Account.AccountStatus = updateDTO.AccountStatus;
             Account.AccountType = updateDTO.AccountType;
 
-            await _db.SaveChangesAsync();
+            await _repo.UpdateAsync(Account);
 
             return NoContent();
         }
         [HttpDelete("{id}")]
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
         { 
-            var Account = await _db.AccountLists.FindAsync(id);
+            var Account = await _repo.GetByIdAsync(id);
 
             if (Account == null)
             {
                 return NotFound();
             }
-            _db.AccountLists.Remove(Account);
-            await _db.SaveChangesAsync();
+            await _repo.DeleteAsync(Account);
             return NoContent();
         }
     }
