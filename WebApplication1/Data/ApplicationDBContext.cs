@@ -12,5 +12,6 @@ namespace WebApplication1.Data
         }
 
         public DbSet<AccountList> AccountLists { get; set; }
+        public DbSet<User> User { get; set; }
     }
 }

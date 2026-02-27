@@ -19,7 +19,6 @@ namespace WebApplication1.Models
         public string AccountStatus { get; set; } = string.Empty; //Hesap durumu, A: Açık, K: Kapalı
         public DateTime LastTransactionDate { get; set; } //Son işlem tarihi
         public int AccountType { get; set; } //Hesap tipi
-        public List<Transaction> Transactions { get; set; } = new List<Transaction>();
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]
