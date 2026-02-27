@@ -23,9 +23,13 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Username already exists.");
             }
+            if (await _repo.EmailExists(registerDTO.Email))
+            {
+                return BadRequest("Email already exists.");
+            }
             var userToCreate = new User
             {
-                UserName = registerDTO.Username,
+                UserName = registerDTO.Username.ToLower(),
                 Email = registerDTO.Email
 
             };
@@ -35,6 +39,19 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, "An error occurred while creating the user.");
             }
             return StatusCode(201, new { message = "User registered successfully." });
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+        {
+            var token = await _repo.Login(loginDTO.Username.ToLower(), loginDTO.Password);
+
+            if (token == null)
+            {
+                return Unauthorized("Invalid username or password.");
+            }
+
+            return Ok(new { token = token, expires = DateTime.Now.AddDays(1) });
         }
     }
 }

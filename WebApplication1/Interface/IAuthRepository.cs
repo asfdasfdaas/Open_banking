@@ -7,5 +7,6 @@ namespace WebApplication1.Interface
         Task<User?> Register(User user, string password);
         Task<string?> Login(string username, string password); // Returns a Token string
         Task<bool> UserExists(string username);
+        Task<bool> EmailExists(string email);
     }
 }
