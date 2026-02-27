@@ -74,7 +74,7 @@ namespace WebApplication1.Repository
         public async Task<bool> UserExists(string username)
         {
             // Checks if any user in the DB already has this username
-            return await _db.User.AnyAsync(x => x.UserName == username);
+            return await _db.User.AnyAsync(x => x.UserName == username.ToLower());
         }
         public async Task<bool> EmailExists(string email)
         {

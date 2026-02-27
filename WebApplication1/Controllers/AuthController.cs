@@ -23,7 +23,7 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Username already exists.");
             }
-            if (await _repo.EmailExists(registerDTO.Email))
+            if (await _repo.EmailExists(registerDTO.Email.ToLower()))
             {
                 return BadRequest("Email already exists.");
             }
