@@ -57,7 +57,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
         {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
             var newAccount = createDTO.ToAccountFromCreateDTO();
+
+            newAccount.UserId = userId;
 
             await _repo.CreateAsync(newAccount);
 
