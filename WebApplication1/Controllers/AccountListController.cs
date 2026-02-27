@@ -7,6 +7,7 @@ using System.Security.Principal;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Interfaces;
+using WebApplication1.Mapper;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 namespace WebApplication1.Controllers
@@ -21,27 +22,19 @@ namespace WebApplication1.Controllers
         {
             _repo = repo;
         }
+
         [HttpGet] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             var accounts = await _repo.GetAllAsync();
 
-            var accountDtos = accounts.Select(a => new AccountListDTO
-            {
-                AccountNumber = a.AccountNumber,
-                Balance = a.Balance,
-                RemainingBalance = a.RemainingBalance,
-                IBAN = a.IBAN,
-                CurrencyCode = a.CurrencyCode,
-                AccountStatus = a.AccountStatus,
-                LastTransactionDate = a.LastTransactionDate,
-                AccountType = a.AccountType
-            }).ToList();
+            var accountDtos = accounts.Select(s => s.ToAccountDto()).ToList();
 
             return Ok(accountDtos);
 
 
         }
+
         [HttpGet("{id}")] //api/AccountList/{id}
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
@@ -50,35 +43,16 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            var accountDto = new AccountListDTO
-            {
-                AccountNumber = account.AccountNumber,
-                Balance = account.Balance,
-                RemainingBalance = account.RemainingBalance,
-                IBAN = account.IBAN,
-                CurrencyCode = account.CurrencyCode,
-                AccountStatus = account.AccountStatus,
-                LastTransactionDate = account.LastTransactionDate,
-                AccountType = account.AccountType
-            };
+            var accountDto = account.ToAccountDto();
 
             return Ok(accountDto);
         }
+
         [HttpPost]
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
         {
-            var newAccount = new AccountList
-            {
-                AccountNumber = createDTO.AccountNumber,
-                IBAN = createDTO.IBAN,
-                CurrencyCode = createDTO.CurrencyCode,
-                AccountType = createDTO.AccountType,
+            var newAccount = createDTO.ToAccountFromCreateDTO();
 
-                Balance = 0,
-                RemainingBalance = 0,
-                AccountStatus = "A",
-                LastTransactionDate = DateTime.Now
-            };
             await _repo.CreateAsync(newAccount);
 
             var responseDto = new AccountListDTO
@@ -96,8 +70,9 @@ namespace WebApplication1.Controllers
             return CreatedAtAction(nameof(GetById), new { id = newAccount.Id }, responseDto);
 
         }
+
         [HttpPut("{id}")]
-        public async Task<ActionResult<AccountListDTO>> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
+        public async Task<IActionResult> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
             var Account = await _repo.GetByIdAsync(id);
 
@@ -106,14 +81,13 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            Account.CurrencyCode = updateDTO.CurrencyCode;
-            Account.AccountStatus = updateDTO.AccountStatus;
-            Account.AccountType = updateDTO.AccountType;
+            Account.UpdateAccountFromDTO(updateDTO);
 
             await _repo.UpdateAsync(Account);
 
             return NoContent();
         }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
         { 
