@@ -29,7 +29,9 @@ namespace WebApplication1.Controllers
         [HttpGet] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
             var accounts = await _repo.GetUserAccountsAsync(userId);
 
             var accountDtos = accounts.Select(s => s.ToAccountDto()).ToList();
