@@ -7,7 +7,7 @@ namespace WebApplication1.Interfaces
     {
         Task<IEnumerable<AccountList>> GetAllAsync();
         Task<IEnumerable<AccountList>> GetUserAccountsAsync(int userId);
-        Task<AccountList?> GetByIdAsync(int id);
+        Task<AccountList?> GetByIdAsync(int id, int userId);
         Task CreateAsync(AccountList account);
         Task UpdateAsync(AccountList account);
         Task DeleteAsync(AccountList account);

@@ -29,9 +29,9 @@ namespace WebApplication1.Repository
                 .ToListAsync();
         }
 
-        public async Task<AccountList?> GetByIdAsync(int id)
+        public async Task<AccountList?> GetByIdAsync(int id, int userId)
         {
-            return await _db.AccountLists.FindAsync(id);
+            return await _db.AccountLists.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
         }
 
         public async Task CreateAsync(AccountList account)

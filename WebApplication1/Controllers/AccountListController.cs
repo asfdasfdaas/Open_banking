@@ -44,7 +44,8 @@ namespace WebApplication1.Controllers
         [HttpGet("{id}")] //api/AccountList/{id}
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
-            var account = await _repo.GetByIdAsync(id);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var account = await _repo.GetByIdAsync(id,userId);
             if (account == null)
             {
                 return NotFound();
@@ -83,7 +84,8 @@ namespace WebApplication1.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
-            var Account = await _repo.GetByIdAsync(id);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var Account = await _repo.GetByIdAsync(id,userId);
 
             if (Account == null)
             {
@@ -99,8 +101,9 @@ namespace WebApplication1.Controllers
 
         [HttpDelete("{id}")]
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
-        { 
-            var Account = await _repo.GetByIdAsync(id);
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var Account = await _repo.GetByIdAsync(id,userId);
 
             if (Account == null)
             {
