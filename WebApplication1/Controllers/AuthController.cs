@@ -30,7 +30,7 @@ namespace WebApplication1.Controllers
             var userToCreate = new User
             {
                 UserName = registerDTO.Username.ToLower(),
-                Email = registerDTO.Email
+                Email = registerDTO.Email.ToLower()
 
             };
             var createdUser = await _repo.Register(userToCreate, registerDTO.Password);

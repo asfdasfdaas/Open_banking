@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using WebApplication1.Data;
@@ -12,6 +14,7 @@ using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 namespace WebApplication1.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AccountListController : ControllerBase
@@ -26,7 +29,8 @@ namespace WebApplication1.Controllers
         [HttpGet] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
-            var accounts = await _repo.GetAllAsync();
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var accounts = await _repo.GetUserAccountsAsync(userId);
 
             var accountDtos = accounts.Select(s => s.ToAccountDto()).ToList();
 
