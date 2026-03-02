@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interface;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
@@ -52,6 +53,22 @@ namespace WebApplication1.Controllers
             }
 
             return Ok(new { token = token, expires = DateTime.Now.AddDays(1) });
+        }
+        [Authorize]
+        [HttpDelete("delete-user-account")]
+        public async Task<IActionResult> DeleteUser()
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return BadRequest("Invalid user ID in token.");
+            }
+            var deleted = await _repo.DeleteUser(userId);
+            if (!deleted)
+            {
+                return NotFound("User not found or already deleted.");
+            }
+            return Ok(new { message = "User deleted successfully." });  
         }
     }
 }

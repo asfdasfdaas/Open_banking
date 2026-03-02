@@ -14,9 +14,10 @@ namespace WebApplication1.Mapper
             IBAN = createDto.IBAN,
             CurrencyCode = createDto.CurrencyCode,
             AccountType = createDto.AccountType,
+            Balance = createDto.Balance,
+            RemainingBalance = createDto.RemainingBalance,
 
-            Balance = 0,
-            RemainingBalance = 0,
+
             AccountStatus = "A",
             LastTransactionDate = DateTime.Now
         };

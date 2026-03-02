@@ -26,7 +26,7 @@ namespace WebApplication1.Controllers
             _repo = repo;
         }
 
-        [HttpGet] //api/AccountList
+        [HttpGet("get-accounts-list")] //api/AccountList
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -41,7 +41,7 @@ namespace WebApplication1.Controllers
 
         }
 
-        [HttpGet("{id}")] //api/AccountList/{id}
+        [HttpGet("{id}get-account")] //api/AccountList/{id}
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
@@ -55,7 +55,7 @@ namespace WebApplication1.Controllers
             return Ok(accountDto);
         }
 
-        [HttpPost]
+        [HttpPost("create-account")]
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
@@ -81,7 +81,7 @@ namespace WebApplication1.Controllers
 
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}update-account")]
         public async Task<IActionResult> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
@@ -99,7 +99,7 @@ namespace WebApplication1.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}delete-account")]
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);

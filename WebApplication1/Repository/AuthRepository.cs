@@ -23,10 +23,10 @@ namespace WebApplication1.Repository
         {
             // 1. Identify what information (Claims) we want to "bake" into the token
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.UserName)
-    };
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName)
+        };
 
             // 2. Get the Secret Key from appsettings.json
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
@@ -70,6 +70,16 @@ namespace WebApplication1.Repository
 
             // 3. Generate a JWT Token
             return CreateToken(user);
+        }
+        public async Task<bool> DeleteUser(int userId)
+        {
+            var user = await _db.User.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null)
+            {
+                return false; // Bad username or password
+            }
+            _db.User.Remove(user);
+            return await _db.SaveChangesAsync() > 0;
         }
         public async Task<bool> UserExists(string username)
         {
