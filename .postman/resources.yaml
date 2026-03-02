@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: ""
+
+localResources:
+  specs:
+    - ..\WebApplication1\obj\Debug\net8.0\EndpointInfo\WebApplication1.json
