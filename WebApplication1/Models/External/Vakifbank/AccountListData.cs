@@ -4,7 +4,7 @@ namespace WebApplication1.Models.External.Vakifbank
 {
     public class AccountListData
     {
-        [JsonPropertyName("accounts")]
+        [JsonPropertyName("Accounts")]
         public List<VakifbankAccount> Accounts { get; set; } = new List<VakifbankAccount>();
     }
 }
