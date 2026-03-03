@@ -17,6 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddHttpClient<IBankIntegrationService, VakifbankIntegrationService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Vakifbank:BaseUrl"]!);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
