@@ -20,6 +20,7 @@ namespace WebApplication1.Models
         public DateTime LastTransactionDate { get; set; } //Son işlem tarihi
         public int AccountType { get; set; } //Hesap tipi
         public int UserId { get; set; }
+        public string ProviderName { get; set; } = "Internal";
 
         [ForeignKey("UserId")]
         public User? User { get; set; }

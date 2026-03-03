@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Interfaces;
 using WebApplication1.Models.External.Vakifbank;
 using WebApplication1.Services;
 
@@ -11,9 +12,11 @@ namespace WebApplication1.Controllers
     public class VakifbankController : ControllerBase
     {
         private readonly IBankIntegrationService _vakifbankService;
-        public VakifbankController(IBankIntegrationService vakifbankService)
+        private readonly IAccountRepository _repo;
+        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo)
         {
             _vakifbankService = vakifbankService;
+            _repo = repo;
         }
 
         [HttpPost("vakif-accounts")]
