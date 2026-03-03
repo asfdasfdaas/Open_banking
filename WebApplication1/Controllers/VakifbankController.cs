@@ -31,9 +31,9 @@ namespace WebApplication1.Controllers
                 var accounts = await _vakifbankService.GetAccountsFromBankAsync(userId);
                 return Ok(accounts);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching accounts.", details = ex.Message });
+                return StatusCode(500, "An error occurred while fetching accounts.");
             }
         }
     }

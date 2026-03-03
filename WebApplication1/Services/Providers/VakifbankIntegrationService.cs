@@ -23,11 +23,11 @@ namespace WebApplication1.Services.Providers
         {
             var requestBody = new Dictionary<string, string>
                 {
-                    { "client_id", _config["Vakifbank:ClientId"]! }, // Store these in User Secrets!
-                    { "client_secret", _config["Vakifbank:ClientSecret"]! },
+                    { "client_id", _config["BankAPI:ClientId"]! }, // Store these in User Secrets!
+                    { "client_secret", _config["BankAPI:ClientSecret"]! },
                     { "grant_type", "b2b_credentials" },
                     { "scope", "account" },
-                    { "consentId", _config["Vakifbank:ConsentId"]! }, // Usually dynamic, but static for testing
+                    { "consentId", _config["BankAPI:TestConsentId"]! }, // Usually dynamic, but static for testing
                     { "resource", "sandbox" }
                 };
 
@@ -55,15 +55,9 @@ namespace WebApplication1.Services.Providers
             response.EnsureSuccessStatusCode();
 
             var jsonString = await response.Content.ReadAsStringAsync();
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
-            };
+            var result = JsonSerializer.Deserialize<AccountListResponse>(jsonString);
 
-            
-            var result = JsonSerializer.Deserialize<AccountListResponse>(jsonString, options);
-
+            // AccountListResponse wraps the list under Data -> Accounts
             var accounts = result?.Data?.Accounts;
             if (accounts == null || accounts.Count == 0)
                 return Enumerable.Empty<AccountListDTO>();
