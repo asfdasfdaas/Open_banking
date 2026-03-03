@@ -55,6 +55,10 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("LastTransactionDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ProviderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("RemainingBalance")
                         .HasColumnType("decimal(18,2)");
 
