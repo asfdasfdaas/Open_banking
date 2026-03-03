@@ -22,14 +22,14 @@ namespace WebApplication1.Services.Providers
         public async Task<string> GetBankTokenAsync()
         {
             var requestBody = new Dictionary<string, string>
-                {
-                    { "client_id", _config["BankAPI:ClientId"]! }, // Store these in User Secrets!
-                    { "client_secret", _config["BankAPI:ClientSecret"]! },
-                    { "grant_type", "b2b_credentials" },
-                    { "scope", "account" },
-                    { "consentId", _config["BankAPI:TestConsentId"]! }, // Usually dynamic, but static for testing
-                    { "resource", "sandbox" }
-                };
+            {
+                { "client_id", _config["Vakifbank:ClientId"]! },
+                { "client_secret", _config["Vakifbank:ClientSecret"]! },
+                { "grant_type", "b2b_credentials" },
+                { "scope", "account" },
+                { "consentId", _config["Vakifbank:ConsentId"]! },
+                { "resource", "sandbox" }
+            };
 
             var content = new FormUrlEncodedContent(requestBody);
 
@@ -55,9 +55,17 @@ namespace WebApplication1.Services.Providers
             response.EnsureSuccessStatusCode();
 
             var jsonString = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<AccountListResponse>(jsonString);
 
-            // AccountListResponse wraps the list under Data -> Accounts
+            // 1. Tell C# to allow Strings to be converted to Decimals automatically
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
+            };
+
+            // 2. Unpack the JSON using the options
+            var result = JsonSerializer.Deserialize<AccountListResponse>(jsonString, options);
+
             var accounts = result?.Data?.Accounts;
             if (accounts == null || accounts.Count == 0)
                 return Enumerable.Empty<AccountListDTO>();
@@ -67,7 +75,7 @@ namespace WebApplication1.Services.Providers
                 AccountNumber = a.AccountNumber,
                 Balance = a.Balance,
                 RemainingBalance = a.RemainingBalance,
-                IBAN = a.Iban, // map VakifbankAccount.Iban -> DTO.IBAN
+                IBAN = a.Iban,
                 CurrencyCode = a.CurrencyCode,
                 AccountStatus = a.AccountStatus,
                 LastTransactionDate = a.LastTransactionDate,
