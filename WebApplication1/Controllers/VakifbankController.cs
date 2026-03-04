@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interfaces;
+using WebApplication1.Models;
 using WebApplication1.Models.External.Vakifbank;
 using WebApplication1.Services;
 
@@ -20,23 +21,60 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("vakif-accounts")]
-        public async Task<IActionResult> GetAccounts()
+        public async Task<IActionResult> SyncAccounts()
         {
             try
             {
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
-                if (!int.TryParse(userIdClaim, out int userId))
+                // 1. Fetch live data from Vakifbank
+                var externalAccounts = await _vakifbankService.GetAccountsFromBankAsync(userId);
+
+                // 2. Fetch the user's current accounts from your database
+                var existingAccounts = await _repo.GetUserAccountsAsync(userId);
+
+                // 3. The Sync Loop
+                foreach (var extAcc in externalAccounts)
                 {
-                    return Unauthorized("Invalid token.");
+                    // Check if we already saved this specific account number
+                    var existingDbAccount = existingAccounts.FirstOrDefault(a => a.AccountNumber == extAcc.AccountNumber);
+
+                    if (existingDbAccount == null)
+                    {
+                        // INSERT: It's a brand new account!
+                        var newAccount = new AccountList
+                        {
+                            UserId = userId,
+                            AccountNumber = extAcc.AccountNumber,
+                            Balance = extAcc.Balance,
+                            RemainingBalance = extAcc.RemainingBalance,
+                            IBAN = extAcc.IBAN,
+                            CurrencyCode = extAcc.CurrencyCode,
+                            AccountStatus = extAcc.AccountStatus,
+                            AccountType = extAcc.AccountType,
+                            LastTransactionDate = extAcc.LastTransactionDate,
+                            ProviderName = "Vakifbank" // Tag it so we know where it came from
+                        };
+                        await _repo.CreateAsync(newAccount);
+                    }
+                    else
+                    {
+                        // UPDATE: We already have it, just update the live balance!
+                        existingDbAccount.Balance = extAcc.Balance;
+                        existingDbAccount.RemainingBalance = extAcc.RemainingBalance;
+                        existingDbAccount.LastTransactionDate = extAcc.LastTransactionDate;
+
+                        await _repo.UpdateAsync(existingDbAccount);
+                    }
                 }
 
-                var accounts = await _vakifbankService.GetAccountsFromBankAsync(userId);
-                return Ok(accounts);
+                // Return the fresh data to the screen
+                return Ok(externalAccounts);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while fetching accounts.");
+                return StatusCode(500, new { message = "An error occurred during sync.", details = ex.Message });
             }
         }
     }
