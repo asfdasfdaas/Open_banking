@@ -56,5 +56,18 @@ namespace WebApplication1.Repository
         {
             return await _db.SaveChangesAsync() > 0;
         }
+        public async Task<List<string>> GetExistingTransactionIdsAsync(int accountId)
+        {
+            return await _db.AccountTransactions
+                            .Where(t => t.AccountListId == accountId)
+                            .Select(t => t.TransactionId)
+                            .ToListAsync();
+        }
+
+        public async Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions)
+        {
+            await _db.AccountTransactions.AddRangeAsync(transactions);
+            await SaveAsync();
+        }
     }
 }

@@ -14,12 +14,10 @@ namespace WebApplication1.Controllers
     {
         private readonly IBankIntegrationService _vakifbankService;
         private readonly IAccountRepository _repo;
-        private readonly Data.ApplicationDBContext _db;
-        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo, Data.ApplicationDBContext db)
+        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo)
         {
             _vakifbankService = vakifbankService;
             _repo = repo;
-            _db = db;
         }
 
         [HttpPost("vakif-accounts")]
@@ -138,12 +136,10 @@ namespace WebApplication1.Controllers
                 var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate);
 
                 // 3. Get transactions we ALREADY saved for this account
-                var existingTxIds = _db.Set<AccountTransaction>()
-                                       .Where(t => t.AccountListId == dbAccount.Id)
-                                       .Select(t => t.TransactionId)
-                                       .ToList();
+                var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id);
 
-                // 4. Save only the NEW transactions
+                // 4. Prepare only the NEW transactions
+                var newTransactions = new List<AccountTransaction>();
                 foreach (var extTx in externalTransactions)
                 {
                     if (!existingTxIds.Contains(extTx.TransactionId))
@@ -159,11 +155,14 @@ namespace WebApplication1.Controllers
                             Balance = extTx.Balance,
                             TransactionDate = extTx.TransactionDate
                         };
-                        _db.Add(newTx);
+                        newTransactions.Add(newTx);
                     }
                 }
 
-                await _db.SaveChangesAsync();
+                if (newTransactions.Count > 0)
+                {
+                    await _repo.SaveTransactionsAsync(newTransactions);
+                }
 
                 return Ok(externalTransactions);
             }
