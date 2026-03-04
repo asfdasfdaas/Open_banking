@@ -77,5 +77,22 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, new { message = "An error occurred during sync.", details = ex.Message });
             }
         }
+
+        [HttpGet("account-detail/{accountNumber}")]
+        public async Task<IActionResult> GetAccountDetail([FromRoute] string accountNumber)
+        {
+            try
+            {
+                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber);
+
+                if (detail == null) return NotFound("Account details not found at the bank.");
+
+                return Ok(detail);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred fetching account details.", details = ex.Message });
+            }
+        }
     }
 }

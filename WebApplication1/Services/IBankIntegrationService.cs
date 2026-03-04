@@ -6,5 +6,7 @@ namespace WebApplication1.Services
     {
         Task<string> GetBankTokenAsync();
         Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId);
+
+        Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber);
     }
 }

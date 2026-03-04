@@ -82,5 +82,45 @@ namespace WebApplication1.Services.Providers
                 AccountType = a.AccountType
             });
         }
+
+        public async Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber)
+        {
+            var token = await GetBankTokenAsync();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var requestBody = JsonSerializer.Serialize(new { AccountNumber = accountNumber });
+            var content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/accountDetail", content); // Adjust URL path to match Postman
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
+            };
+
+            var result = JsonSerializer.Deserialize<AccountDetailResponse>(jsonString, options);
+
+            var info = result?.Data?.AccountInfo;
+            if (info == null) return null;
+
+            return new AccountDetailDTO
+            {
+                AccountNumber = info.AccountNumber,
+                Balance = info.Balance,
+                RemainingBalance = info.RemainingBalance,
+                IBAN = info.Iban,
+                CurrencyCode = info.CurrencyCode,
+                AccountStatus = info.AccountStatus,
+                LastTransactionDate = info.LastTransactionDate,
+                AccountType = info.AccountType,
+                OpeningDate = info.OpeningDate,
+                CustomerNumber = info.CustomerNumber,
+                BranchCode = info.BranchCode
+            };
+        }
     }
 }
