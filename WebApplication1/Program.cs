@@ -78,6 +78,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(options =>
+    options.AllowAnyOrigin() // Or specify your frontend's exact URL
+           .AllowAnyMethod()
+           .AllowAnyHeader());
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
