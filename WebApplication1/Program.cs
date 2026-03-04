@@ -10,10 +10,7 @@ using WebApplication1.Services.Providers;
 using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -46,7 +43,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Open Banking API", Version = "v1" });
 
-    // This defines the "How" (Bearer Token)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -57,7 +53,6 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    // This defines the "Where" (Apply it to all endpoints)
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {

@@ -18,7 +18,6 @@ namespace WebApplication1.Models.DTOs
         public string IBAN { get; set; } = string.Empty; //Uluslararası banka hesap numarası
 
         [Required]
-        [StringLength(3, MinimumLength = 3, ErrorMessage = "Currency code must be 3 letters (e.g., TRY, USD).")]
         public string CurrencyCode { get; set; } = string.Empty; //Döviz kodu
 
         [Required]
