@@ -10,5 +10,7 @@ namespace WebApplication1.Services
         Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber);
 
         Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate);
+
+        Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber);
     }
 }

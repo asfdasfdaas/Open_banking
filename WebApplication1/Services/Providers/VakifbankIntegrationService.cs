@@ -165,5 +165,39 @@ namespace WebApplication1.Services.Providers
                 TransactionDate = t.TransactionDate
             });
         }
+        public async Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber)
+        {
+            var token = await GetBankTokenAsync();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // 1. Build the JSON body
+            var requestBody = JsonSerializer.Serialize(new
+            {
+                TransactionId = transactionId,
+                AccountNumber = accountNumber,
+                ReceiptFormat = "1"
+            });
+
+            var content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
+
+            // 2. Send the request 
+            var response = await _httpClient.PostAsync("/getReceipt", content);
+            response.EnsureSuccessStatusCode();
+
+            // 3. Unpack the JSON
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var result = JsonSerializer.Deserialize<ReceiptResponse>(jsonString, options);
+
+            var base64String = result?.Documents?.PdfReceipt;
+
+            if (string.IsNullOrEmpty(base64String))
+            {
+                throw new Exception("The bank did not return a valid PDF string.");
+            }
+
+            // 4. Convert the giant string of text back into a raw PDF file
+            return Convert.FromBase64String(base64String);
+        }
     }
 }

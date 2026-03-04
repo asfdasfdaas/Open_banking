@@ -171,5 +171,22 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, new { message = "An error occurred syncing transactions.", details = ex.Message });
             }
         }
+        [HttpGet("receipt/{accountNumber}/{transactionId}")]
+        public async Task<IActionResult> DownloadReceipt([FromRoute] string accountNumber, [FromRoute] string transactionId)
+        {
+            try
+            {
+                // 1. Get the raw PDF bytes from our service
+                byte[] pdfBytes = await _vakifbankService.GetReceiptPdfAsync(transactionId, accountNumber);
+
+                // 2. Return it as a downloadable file!
+                // The "application/pdf" tells the browser, "Hey, this is a PDF, open your PDF viewer!"
+                return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to download receipt.", details = ex.Message });
+            }
+        }
     }
 }
