@@ -8,5 +8,7 @@ namespace WebApplication1.Services
         Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId);
 
         Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber);
+
+        Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate);
     }
 }

@@ -122,5 +122,48 @@ namespace WebApplication1.Services.Providers
                 BranchCode = info.BranchCode
             };
         }
+
+        public async Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate)
+        {
+            var token = await GetBankTokenAsync();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Build the request body EXACTLY like your Postman example
+            var requestBody = JsonSerializer.Serialize(new
+            {
+                AccountNumber = accountNumber,
+                StartDate = startDate.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                EndDate = endDate.ToString("yyyy-MM-ddTHH:mm:sszzz")
+            });
+
+            var content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/accountTransactions", content); // Update URL if needed
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
+            };
+
+            var result = JsonSerializer.Deserialize<TransactionResponse>(jsonString, options);
+
+            var transactions = result?.Data?.AccountTransactions;
+            if (transactions == null) return Enumerable.Empty<TransactionDTO>();
+
+            return transactions.Select(t => new TransactionDTO
+            {
+                TransactionId = t.TransactionId,
+                TransactionName = t.TransactionName,
+                Description = t.Description,
+                TransactionType = t.TransactionType,
+                Amount = t.Amount,
+                Balance = t.Balance,
+                TransactionDate = t.TransactionDate
+            });
+        }
     }
 }

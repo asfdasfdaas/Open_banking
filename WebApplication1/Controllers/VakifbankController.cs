@@ -14,10 +14,12 @@ namespace WebApplication1.Controllers
     {
         private readonly IBankIntegrationService _vakifbankService;
         private readonly IAccountRepository _repo;
-        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo)
+        private readonly Data.ApplicationDBContext _db;
+        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo, Data.ApplicationDBContext db)
         {
             _vakifbankService = vakifbankService;
             _repo = repo;
+            _db = db;
         }
 
         [HttpPost("vakif-accounts")]
@@ -83,15 +85,91 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber);
+                // 1. Get the current user
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
+                // 2. Fetch the live detail data from the bank
+                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber);
                 if (detail == null) return NotFound("Account details not found at the bank.");
 
+                // 3. Find this specific account in your database
+                var userAccounts = await _repo.GetUserAccountsAsync(userId);
+                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+
+                if (dbAccount != null)
+                {
+                    // 4. Update the database record with the new 3 fields!
+                    dbAccount.OpeningDate = detail.OpeningDate;
+                    dbAccount.CustomerNumber = detail.CustomerNumber;
+                    dbAccount.BranchCode = detail.BranchCode;
+
+                    // Also update the balances since we just got fresh data
+                    dbAccount.Balance = detail.Balance;
+                    dbAccount.RemainingBalance = detail.RemainingBalance;
+
+                    await _repo.UpdateAsync(dbAccount);
+                }
+
+                // Return the full detail to Swagger/Frontend
                 return Ok(detail);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred fetching account details.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("account-transactions/{accountNumber}")]
+        public async Task<IActionResult> SyncTransactions([FromRoute] string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
+
+                // 1. Find the internal Database Account so we have its ID
+                var userAccounts = await _repo.GetUserAccountsAsync(userId);
+                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+
+                if (dbAccount == null) return NotFound("Account not found in your database. Please sync accounts first.");
+
+                // 2. Fetch live transactions from the bank
+                var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate);
+
+                // 3. Get transactions we ALREADY saved for this account
+                var existingTxIds = _db.Set<AccountTransaction>()
+                                       .Where(t => t.AccountListId == dbAccount.Id)
+                                       .Select(t => t.TransactionId)
+                                       .ToList();
+
+                // 4. Save only the NEW transactions
+                foreach (var extTx in externalTransactions)
+                {
+                    if (!existingTxIds.Contains(extTx.TransactionId))
+                    {
+                        var newTx = new AccountTransaction
+                        {
+                            AccountListId = dbAccount.Id,
+                            TransactionId = extTx.TransactionId,
+                            TransactionName = extTx.TransactionName,
+                            Description = extTx.Description,
+                            TransactionType = extTx.TransactionType,
+                            Amount = extTx.Amount,
+                            Balance = extTx.Balance,
+                            TransactionDate = extTx.TransactionDate
+                        };
+                        _db.Add(newTx);
+                    }
+                }
+
+                await _db.SaveChangesAsync();
+
+                return Ok(externalTransactions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred syncing transactions.", details = ex.Message });
             }
         }
     }

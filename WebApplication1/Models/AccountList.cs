@@ -24,5 +24,14 @@ namespace WebApplication1.Models
 
         [ForeignKey("UserId")]
         public User? User { get; set; }
+
+
+
+        //AccountDetail
+        public DateTime? OpeningDate { get; set; }
+        public string? CustomerNumber { get; set; }
+        public string? BranchCode { get; set; }
+
+        public List<AccountTransaction> Transactions { get; set; } = new List<AccountTransaction>();
     }
 }
