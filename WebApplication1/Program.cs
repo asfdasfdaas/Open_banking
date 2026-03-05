@@ -14,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddCors();
+
 builder.Services.AddHttpClient<IBankIntegrationService, VakifbankIntegrationService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Vakifbank:BaseUrl"]!);

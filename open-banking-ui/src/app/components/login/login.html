@@ -1,0 +1,19 @@
+<div class="login-container">
+  <h2>Secure Bank Login</h2>
+
+  @if (errorMessage) {
+  <p style="color: red; font-weight: bold;">{{ errorMessage }}</p>
+  }
+
+  <div style="margin-bottom: 10px;">
+    <label>Username: </label>
+    <input type="text" [(ngModel)]="credentials.username" placeholder="Enter username" />
+  </div>
+
+  <div style="margin-bottom: 10px;">
+    <label>Password: </label>
+    <input type="password" [(ngModel)]="credentials.password" placeholder="Enter password" />
+  </div>
+
+  <button (click)="onLogin()">Log In</button>
+</div>

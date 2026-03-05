@@ -1,1 +1,24 @@
-<p>dashboard works!</p>
+<div class="dashboard-container">
+  <button (click)="syncVakifbank()">Sync Vakifbank Accounts</button>
+
+  <h3>My Accounts</h3>
+
+  @if (isLoading) {
+  <p style="color: blue;">Loading your accounts...</p>
+  }
+
+  @if (accounts.length === 0) {
+  <p>No accounts found in the database. Click Sync!</p>
+  }
+  @else {
+  <ul>
+    @for (account of accounts; track account.accountNumber) {
+    <li>
+      <strong>{{ account.providerName }}</strong> - {{ account.accountNumber }}
+      <br>
+      Balance: {{ account.balance }} {{ account.currencyCode }}
+    </li>
+    }
+  </ul>
+  }
+</div>

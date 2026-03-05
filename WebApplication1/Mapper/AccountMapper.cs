@@ -16,7 +16,8 @@ namespace WebApplication1.Mapper
                 CurrencyCode = accountModel.CurrencyCode,
                 AccountStatus = accountModel.AccountStatus,
                 LastTransactionDate = accountModel.LastTransactionDate,
-                AccountType = accountModel.AccountType
+                AccountType = accountModel.AccountType,
+                ProviderName = accountModel.ProviderName
             };
         }
     }
