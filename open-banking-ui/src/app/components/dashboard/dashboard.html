@@ -21,10 +21,14 @@
   @else {
   <ul>
     @for (account of accounts; track account.accountNumber) {
-    <li style="margin-bottom: 10px;">
+    <li style="margin-bottom: 15px; padding: 10px; border: 1px solid #ccc;">
       <strong>{{ account.providerName }}</strong> - {{ account.accountNumber }}
       <br>
       Balance: {{ account.balance }} {{ account.currencyCode }}
+      <br>
+      <button (click)="viewDetails(account.accountNumber)" style="margin-top: 10px;">
+        View Details & Transactions
+      </button>
     </li>
     }
   </ul>

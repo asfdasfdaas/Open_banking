@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { BankApiService } from '../../services/bank-api';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,7 +22,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private bankApi: BankApiService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
 
   // This runs automatically when the page loads
@@ -44,6 +46,11 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => console.error('Failed to load accounts', err)
     });
+  }
+
+  viewDetails(accountNumber: string) {
+    // Navigates to exactly: localhost:4200/account/12345
+    this.router.navigate(['/account', accountNumber]);
   }
 
   syncVakifbank() {
