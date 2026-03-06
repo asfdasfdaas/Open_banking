@@ -139,7 +139,15 @@ namespace WebApplication1.Services.Providers
             var content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync("/accountTransactions", content); // Update URL if needed
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // 2. Read the actual error message the bank sent back
+                var errorBody = await response.Content.ReadAsStringAsync();
+
+                // 3. Throw a custom exception that includes the bank's detailed complaint!
+                throw new Exception($"Bank API rejected the request. Status: {response.StatusCode}. Bank Details: {errorBody}");
+            }
 
             var jsonString = await response.Content.ReadAsStringAsync();
 
@@ -182,7 +190,15 @@ namespace WebApplication1.Services.Providers
 
             // 2. Send the request 
             var response = await _httpClient.PostAsync("/getReceipt", content);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // 2. Read the actual error message the bank sent back
+                var errorBody = await response.Content.ReadAsStringAsync();
+
+                // 3. Throw a custom exception that includes the bank's detailed complaint!
+                throw new Exception($"Bank API rejected the request. Status: {response.StatusCode}. Bank Details: {errorBody}");
+            }
 
             // 3. Unpack the JSON
             var jsonString = await response.Content.ReadAsStringAsync();
