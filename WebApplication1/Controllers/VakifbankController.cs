@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interface;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 using WebApplication1.Models.External.Vakifbank;
 using WebApplication1.Services;
 
@@ -96,6 +97,29 @@ namespace WebApplication1.Controllers
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
+                var userAccounts = await _repo.GetUserAccountsAsync(userId);
+                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+
+                if (dbAccount == null) return NotFound("Account not found in your database.");
+
+                if (dbAccount.ProviderName == "Internal")
+                {
+                    var internalDetail = new AccountDetailDTO
+                    {
+                        AccountNumber = dbAccount.AccountNumber,
+                        Balance = dbAccount.Balance,
+                        RemainingBalance = dbAccount.RemainingBalance,
+                        IBAN = dbAccount.IBAN,
+                        CurrencyCode = dbAccount.CurrencyCode,
+                        AccountStatus = dbAccount.AccountStatus,
+                        AccountType = dbAccount.AccountType,
+                        OpeningDate = dbAccount.OpeningDate,
+                        CustomerNumber = dbAccount.CustomerNumber!,
+                        BranchCode = dbAccount.BranchCode!
+                    };
+                    return Ok(internalDetail);
+                }
+
                 var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
                 if (string.IsNullOrEmpty(consentId))
                 {
@@ -105,10 +129,6 @@ namespace WebApplication1.Controllers
                 // 2. Fetch the live detail data from the bank
                 var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber, consentId);
                 if (detail == null) return NotFound("Account details not found at the bank.");
-
-                // 3. Find this specific account in your database
-                var userAccounts = await _repo.GetUserAccountsAsync(userId);
-                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
 
                 if (dbAccount != null)
                 {
@@ -146,6 +166,11 @@ namespace WebApplication1.Controllers
                 var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
 
                 if (dbAccount == null) return NotFound("Account not found in your database. Please sync accounts first.");
+
+                if (dbAccount.ProviderName == "Internal")
+                {
+                    return BadRequest(new { message = "Internal accounts cannot be synced with external banks." });
+                }
 
                 var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
                 if (string.IsNullOrEmpty(consentId))

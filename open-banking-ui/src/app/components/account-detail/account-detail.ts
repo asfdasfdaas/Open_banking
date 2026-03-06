@@ -67,7 +67,6 @@ export class AccountDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to sync transactions', err);
-        alert('Failed to sync transactions. Check console.');
         this.isLoading = false;
       }
     });

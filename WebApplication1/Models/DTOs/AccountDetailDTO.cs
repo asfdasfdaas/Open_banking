@@ -11,7 +11,7 @@
         public DateTime LastTransactionDate { get; set; }
         public int AccountType { get; set; }
 
-        public DateTime OpeningDate { get; set; }
+        public DateTime? OpeningDate { get; set; }
         public string CustomerNumber { get; set; } = string.Empty;
         public string BranchCode { get; set; } = string.Empty;
     }

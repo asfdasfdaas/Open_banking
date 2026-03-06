@@ -15,8 +15,18 @@
       <p><strong>Balance:</strong> {{ details.balance }} {{ details.currencyCode }}</p>
       <p><strong>IBAN:</strong> {{ details.iban }}</p>
       <p><strong>Status:</strong> {{ details.accountStatus === 'A' ? 'Active' : details.accountStatus }}</p>
+
+      @if (details.branchCode) {
       <p><strong>Branch Code:</strong> {{ details.branchCode }}</p>
+      }
+
+      @if (details.customerNumber) {
       <p><strong>Customer No:</strong> {{ details.customerNumber }}</p>
+      }
+
+      @if (details.openingDate && details.openingDate !== '0001-01-01T00:00:00') {
+      <p><strong>Opening Date:</strong> {{ details.openingDate | date:'mediumDate' }}</p>
+      }
     </div>
   </div>
 
