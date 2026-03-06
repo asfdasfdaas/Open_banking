@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -24,5 +24,11 @@ export class AuthService {
   // A helper function to grab the token later
   getToken(): string | null {
     return localStorage.getItem('jwt_token');
+  }
+
+  saveVakifbankConsent(consentId: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    // Note the `"${consentId}"` - .NET [FromBody] strings MUST be quoted!
+    return this.http.post(`${this.baseUrl}/save-vakifbank-consent`, `"${consentId}"`, { headers });
   }
 }
