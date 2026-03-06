@@ -91,6 +91,12 @@ namespace WebApplication1.Repository
             return await _db.User.AnyAsync(x => x.Email == email.ToLower());
         }
 
+        public async Task<string?> GetVakifbankConsentIdAsync(int userId)
+        {
+            var user = await _db.User.FirstOrDefaultAsync(u => u.Id == userId);
+            return user?.VakifbankConsentId;
+        }
+
         public async Task<bool> SaveVakifbankConsentAsync(int userId, string consentId)
         {
             var user = await _db.User.FirstOrDefaultAsync(u => u.Id == userId);

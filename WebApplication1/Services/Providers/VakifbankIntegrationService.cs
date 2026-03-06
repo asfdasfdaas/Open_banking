@@ -19,7 +19,7 @@ namespace WebApplication1.Services.Providers
             _config = config;
         }
 
-        public async Task<string> GetBankTokenAsync()
+        public async Task<string> GetBankTokenAsync(string consentId)
         {
             var requestBody = new Dictionary<string, string>
             {
@@ -27,7 +27,7 @@ namespace WebApplication1.Services.Providers
                 { "client_secret", _config["Vakifbank:ClientSecret"]! },
                 { "grant_type", "b2b_credentials" },
                 { "scope", "account" },
-                { "consentId", _config["Vakifbank:ConsentId"]! },
+                { "consentId", consentId },
                 { "resource", "sandbox" }
             };
 
@@ -43,9 +43,9 @@ namespace WebApplication1.Services.Providers
             return tokenData!.AccessToken;
         }
 
-        public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId)
+        public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId)
         {
-            var token = await GetBankTokenAsync();
+            var token = await GetBankTokenAsync(consentId);
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -83,9 +83,9 @@ namespace WebApplication1.Services.Providers
             });
         }
 
-        public async Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber)
+        public async Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber, string consentId)
         {
-            var token = await GetBankTokenAsync();
+            var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var requestBody = JsonSerializer.Serialize(new { AccountNumber = accountNumber });
@@ -123,9 +123,9 @@ namespace WebApplication1.Services.Providers
             };
         }
 
-        public async Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate, string consentId)
         {
-            var token = await GetBankTokenAsync();
+            var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Build the request body EXACTLY like your Postman example
@@ -165,9 +165,9 @@ namespace WebApplication1.Services.Providers
                 TransactionDate = t.TransactionDate
             });
         }
-        public async Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber)
+        public async Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber, string consentId)
         {
-            var token = await GetBankTokenAsync();
+            var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // 1. Build the JSON body

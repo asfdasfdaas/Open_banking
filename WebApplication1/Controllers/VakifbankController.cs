@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Interface;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Models.External.Vakifbank;
@@ -14,10 +15,12 @@ namespace WebApplication1.Controllers
     {
         private readonly IBankIntegrationService _vakifbankService;
         private readonly IAccountRepository _repo;
-        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo)
+        private readonly IAuthRepository _authRepo;
+        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo, IAuthRepository authRepo)
         {
             _vakifbankService = vakifbankService;
             _repo = repo;
+            _authRepo = authRepo;
         }
 
         [HttpPost("vakif-accounts")]
@@ -28,8 +31,14 @@ namespace WebApplication1.Controllers
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
+                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
+                if (string.IsNullOrEmpty(consentId))
+                {
+                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
+                }
+
                 // 1. Fetch live data from Vakifbank
-                var externalAccounts = await _vakifbankService.GetAccountsFromBankAsync(userId);
+                var externalAccounts = await _vakifbankService.GetAccountsFromBankAsync(userId, consentId);
 
                 // 2. Fetch the user's current accounts from your database
                 var existingAccounts = await _repo.GetUserAccountsAsync(userId);
@@ -87,8 +96,14 @@ namespace WebApplication1.Controllers
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
+                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
+                if (string.IsNullOrEmpty(consentId))
+                {
+                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
+                }
+
                 // 2. Fetch the live detail data from the bank
-                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber);
+                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber, consentId);
                 if (detail == null) return NotFound("Account details not found at the bank.");
 
                 // 3. Find this specific account in your database
@@ -132,8 +147,14 @@ namespace WebApplication1.Controllers
 
                 if (dbAccount == null) return NotFound("Account not found in your database. Please sync accounts first.");
 
+                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
+                if (string.IsNullOrEmpty(consentId))
+                {
+                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
+                }
+
                 // 2. Fetch live transactions from the bank
-                var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate);
+                var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate, consentId);
 
                 // 3. Get transactions we ALREADY saved for this account
                 var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id);
@@ -174,19 +195,21 @@ namespace WebApplication1.Controllers
         [HttpGet("receipt/{accountNumber}/{transactionId}")]
         public async Task<IActionResult> DownloadReceipt([FromRoute] string accountNumber, [FromRoute] string transactionId)
         {
-            try
-            {
-                // 1. Get the raw PDF bytes from our service
-                byte[] pdfBytes = await _vakifbankService.GetReceiptPdfAsync(transactionId, accountNumber);
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
 
-                // 2. Return it as a downloadable file!
-                // The "application/pdf" tells the browser, "Hey, this is a PDF, open your PDF viewer!"
-                return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
-            }
-            catch (Exception ex)
+            var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
+            if (string.IsNullOrEmpty(consentId))
             {
-                return StatusCode(500, new { message = "Failed to download receipt.", details = ex.Message });
+                return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
             }
+            // 1. Get the raw PDF bytes from our service
+            byte[] pdfBytes = await _vakifbankService.GetReceiptPdfAsync(transactionId, accountNumber, consentId);
+
+            // 2. Return it as a downloadable file!
+            // The "application/pdf" tells the browser, "Hey, this is a PDF, open your PDF viewer!"
+            return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
+
         }
     }
 }

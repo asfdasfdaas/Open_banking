@@ -9,6 +9,7 @@ namespace WebApplication1.Interface
         Task<bool> DeleteUser(int userId);
         Task<bool> UserExists(string username);
         Task<bool> EmailExists(string email);
+        Task<string?> GetVakifbankConsentIdAsync(int userId);
         Task<bool> SaveVakifbankConsentAsync(int userId, string consentId);
     }
 }
