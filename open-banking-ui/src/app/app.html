@@ -1,3 +1,24 @@
-<h1>Open Banking Dashboard</h1>
+<nav class="bg-blue-600 p-4 text-white">
 
-<router-outlet></router-outlet>
+  <div style="font-size: 1.5em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px;" (click)="navigate('/')">
+    <span style="font-size: 1.2em;">🏦</span> Open Banking
+  </div>
+
+  <div style="display: flex; gap: 20px; font-size: 1.1em; align-items: center;">
+    <a (click)="navigate('/')" style="color: white; text-decoration: none; cursor: pointer;">Home</a>
+
+    @if (isLoggedIn) {
+    <a (click)="navigate('/dashboard')" style="color: #4da6ff; text-decoration: none; font-weight: bold; cursor: pointer;">Dashboard</a>
+    <a (click)="logout()" style="color: #ff4d4d; text-decoration: none; font-weight: bold; cursor: pointer;">Logout</a>
+    }
+    @else {
+    <a (click)="navigate('/login')" style="color: white; text-decoration: none; cursor: pointer;">Login</a>
+    <a (click)="navigate('/register')" style="color: #28a745; text-decoration: none; font-weight: bold; border: 1px solid #28a745; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Register</a>
+    }
+  </div>
+
+</nav>
+
+<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+  <router-outlet></router-outlet>
+</div>
