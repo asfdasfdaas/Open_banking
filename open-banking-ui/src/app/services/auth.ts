@@ -11,6 +11,10 @@ export class AuthService {
 
   constructor(private http: HttpClient) { }
 
+  register(userData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/register`, userData);
+  }
+
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/login`, credentials).pipe(
       tap((response: any) => {
@@ -24,6 +28,14 @@ export class AuthService {
   // A helper function to grab the token later
   getToken(): string | null {
     return localStorage.getItem('jwt_token');
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken(); // Returns true if token exists, false if it doesn't
+  }
+
+  logout(): void {
+    localStorage.removeItem('jwt_token');
   }
 
   saveVakifbankConsent(consentId: string): Observable<any> {

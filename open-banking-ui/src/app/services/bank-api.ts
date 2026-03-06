@@ -20,4 +20,18 @@ export class BankApiService {
   syncVakifbankAccounts(): Observable<any> {
     return this.http.post(`${this.baseUrl}/Vakifbank/vakif-accounts`, {});
   }
+
+  getAccountDetail(accountNumber: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/Vakifbank/account-detail/${accountNumber}`);
+  }
+
+  syncTransactions(accountNumber: string, startDate: string, endDate: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Vakifbank/account-transactions/${accountNumber}?startDate=${startDate}&endDate=${endDate}`, {});
+  }
+
+  downloadReceipt(accountNumber: string, transactionId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/Vakifbank/receipt/${accountNumber}/${transactionId}`, {
+      responseType: 'blob'
+    });
+  }
 }

@@ -31,6 +31,10 @@ export class DashboardComponent implements OnInit {
     this.loadAccounts();
   }
 
+  navigate(path: string) {
+    this.router.navigate([path]);
+  }
+
   loadAccounts() {
     this.isLoading = true;
 

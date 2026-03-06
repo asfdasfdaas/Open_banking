@@ -1,1 +1,66 @@
-<p>account-detail works!</p>
+<div class="detail-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+
+  <button (click)="goBack()" style="margin-bottom: 20px; padding: 5px 10px;">⬅ Back to Dashboard</button>
+
+  @if (isLoading && !details) {
+  <p style="color: blue;">Loading secure account details...</p>
+  }
+
+  @if (details) {
+  <div style="background: #f4f4f4; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 30px;">
+    <h2 style="margin-top: 0;">Account Overview</h2>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <p><strong>Account Number:</strong> {{ details.accountNumber }}</p>
+      <p><strong>Balance:</strong> {{ details.balance }} {{ details.currencyCode }}</p>
+      <p><strong>IBAN:</strong> {{ details.iban }}</p>
+      <p><strong>Status:</strong> {{ details.accountStatus === 'A' ? 'Active' : details.accountStatus }}</p>
+      <p><strong>Branch Code:</strong> {{ details.branchCode }}</p>
+      <p><strong>Customer No:</strong> {{ details.customerNumber }}</p>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h3 style="margin: 0;">Recent Transactions</h3>
+    <button (click)="syncTransactions()" [disabled]="isLoading" style="padding: 8px 15px;">
+      Sync Last 300 Days
+    </button>
+  </div>
+
+  @if (isLoading && details) {
+  <p style="color: blue;">Fetching live transactions from Vakifbank...</p>
+  }
+
+  @if (transactions.length === 0 && !isLoading) {
+  <p style="color: #666;">No transactions loaded. Click sync above!</p>
+  }
+  @else {
+  <ul style="list-style-type: none; padding-left: 0;">
+    @for (tx of transactions; track tx.transactionId) {
+    <li style="border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px; background: white;">
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong style="color: #555;">{{ tx.transactionDate | date:'medium' }}</strong>
+          <h4 style="margin: 5px 0;">{{ tx.description || tx.transactionName }}</h4>
+          <p style="margin: 0; font-size: 1.1em;">
+            Amount:
+            <span [style.color]="tx.amount < 0 ? 'red' : 'green'">
+              {{ tx.amount }} {{ details.currencyCode }}
+            </span>
+          </p>
+        </div>
+
+        <div>
+          <button (click)="downloadReceipt(tx.transactionId)" style="padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            📄 Download PDF Receipt
+          </button>
+        </div>
+      </div>
+
+    </li>
+    }
+  </ul>
+  }
+  }
+</div>

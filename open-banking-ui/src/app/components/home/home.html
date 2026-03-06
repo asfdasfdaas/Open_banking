@@ -1,0 +1,29 @@
+<div class="home-container" style="max-width: 600px; margin: 100px auto; text-align: center; padding: 40px; border-radius: 8px; background: #f9f9f9; border: 1px solid #ddd;">
+
+  <h1 style="color: #333; margin-bottom: 10px;">🏦 Open Banking Portal</h1>
+  <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+    Manage all your internal and external bank accounts in one secure, unified dashboard.
+  </p>
+
+  <div style="display: flex; gap: 15px; justify-content: center;">
+
+    @if (isUserLoggedIn) {
+    <button (click)="navigate('/dashboard')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
+      📊 Go to Dashboard
+    </button>
+    <button (click)="quit()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
+      🚪 Quit / Log Out
+    </button>
+    }
+
+    @else {
+    <button (click)="navigate('/login')" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
+      🔑 Log In
+    </button>
+    <button (click)="navigate('/register')" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
+      📝 Create Account
+    </button>
+    }
+
+  </div>
+</div>
