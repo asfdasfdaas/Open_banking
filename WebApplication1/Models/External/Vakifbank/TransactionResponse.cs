@@ -11,6 +11,7 @@ namespace WebApplication1.Models.External.Vakifbank
     public class TransactionData
     {
         [JsonPropertyName("AccountTransactions")]
+        [JsonConverter(typeof(SingleOrArrayConverter<VakifbankTransaction>))]
         public List<VakifbankTransaction> AccountTransactions { get; set; } = new List<VakifbankTransaction>();
     }
 

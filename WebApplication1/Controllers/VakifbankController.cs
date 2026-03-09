@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interface;
 using WebApplication1.Interfaces;
-using WebApplication1.Models;
-using WebApplication1.Models.DTOs;
-using WebApplication1.Models.External.Vakifbank;
-using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
 {
@@ -14,227 +10,45 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class VakifbankController : ControllerBase
     {
-        private readonly IBankIntegrationService _vakifbankService;
-        private readonly IAccountRepository _repo;
-        private readonly IAuthRepository _authRepo;
-        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo, IAuthRepository authRepo)
+        private readonly IVakifbankSyncService _syncService;
+
+        public VakifbankController(IVakifbankSyncService syncService)
         {
-            _vakifbankService = vakifbankService;
-            _repo = repo;
-            _authRepo = authRepo;
+            _syncService = syncService;
+        }
+        private int GetUserId()
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId)) throw new UnauthorizedAccessException("Invalid token.");
+            return userId;
         }
 
         [HttpPost("vakif-accounts")]
         public async Task<IActionResult> SyncAccounts()
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
-
-                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
-                if (string.IsNullOrEmpty(consentId))
-                {
-                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
-                }
-
-                // 1. Fetch live data from Vakifbank
-                var externalAccounts = await _vakifbankService.GetAccountsFromBankAsync(userId, consentId);
-
-                // 2. Fetch the user's current accounts from your database
-                var existingAccounts = await _repo.GetUserAccountsAsync(userId);
-
-                // 3. The Sync Loop
-                foreach (var extAcc in externalAccounts)
-                {
-                    // Check if we already saved this specific account number
-                    var existingDbAccount = existingAccounts.FirstOrDefault(a => a.AccountNumber == extAcc.AccountNumber);
-
-                    if (existingDbAccount == null)
-                    {
-                        // INSERT: It's a brand new account!
-                        var newAccount = new AccountList
-                        {
-                            UserId = userId,
-                            AccountNumber = extAcc.AccountNumber,
-                            Balance = extAcc.Balance,
-                            RemainingBalance = extAcc.RemainingBalance,
-                            IBAN = extAcc.IBAN,
-                            CurrencyCode = extAcc.CurrencyCode,
-                            AccountStatus = extAcc.AccountStatus,
-                            AccountType = extAcc.AccountType,
-                            LastTransactionDate = extAcc.LastTransactionDate,
-                            ProviderName = "Vakifbank" // Tag it so we know where it came from
-                        };
-                        await _repo.CreateAsync(newAccount);
-                    }
-                    else
-                    {
-                        // UPDATE: We already have it, just update the live balance!
-                        existingDbAccount.Balance = extAcc.Balance;
-                        existingDbAccount.RemainingBalance = extAcc.RemainingBalance;
-                        existingDbAccount.LastTransactionDate = extAcc.LastTransactionDate;
-
-                        await _repo.UpdateAsync(existingDbAccount);
-                    }
-                }
-
-                // Return the fresh data to the screen
-                return Ok(externalAccounts);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred during sync.", details = ex.Message });
-            }
+            var accounts = await _syncService.SyncAccountsAsync(GetUserId());
+            return Ok(accounts);
         }
 
         [HttpGet("account-detail/{accountNumber}")]
         public async Task<IActionResult> GetAccountDetail([FromRoute] string accountNumber)
         {
-            try
-            {
-                // 1. Get the current user
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
-
-                var userAccounts = await _repo.GetUserAccountsAsync(userId);
-                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
-
-                if (dbAccount == null) return NotFound("Account not found in your database.");
-
-                if (dbAccount.ProviderName == "Internal")
-                {
-                    var internalDetail = new AccountDetailDTO
-                    {
-                        AccountNumber = dbAccount.AccountNumber,
-                        Balance = dbAccount.Balance,
-                        RemainingBalance = dbAccount.RemainingBalance,
-                        IBAN = dbAccount.IBAN,
-                        CurrencyCode = dbAccount.CurrencyCode,
-                        AccountStatus = dbAccount.AccountStatus,
-                        AccountType = dbAccount.AccountType,
-                        OpeningDate = dbAccount.OpeningDate,
-                        CustomerNumber = dbAccount.CustomerNumber!,
-                        BranchCode = dbAccount.BranchCode!
-                    };
-                    return Ok(internalDetail);
-                }
-
-                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
-                if (string.IsNullOrEmpty(consentId))
-                {
-                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
-                }
-
-                // 2. Fetch the live detail data from the bank
-                var detail = await _vakifbankService.GetAccountDetailAsync(accountNumber, consentId);
-                if (detail == null) return NotFound("Account details not found at the bank.");
-
-                if (dbAccount != null)
-                {
-                    // 4. Update the database record with the new 3 fields!
-                    dbAccount.OpeningDate = detail.OpeningDate;
-                    dbAccount.CustomerNumber = detail.CustomerNumber;
-                    dbAccount.BranchCode = detail.BranchCode;
-
-                    // Also update the balances since we just got fresh data
-                    dbAccount.Balance = detail.Balance;
-                    dbAccount.RemainingBalance = detail.RemainingBalance;
-
-                    await _repo.UpdateAsync(dbAccount);
-                }
-
-                // Return the full detail to Swagger/Frontend
-                return Ok(detail);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred fetching account details.", details = ex.Message });
-            }
+            var detail = await _syncService.GetAndSyncAccountDetailAsync(GetUserId(), accountNumber);
+            return Ok(detail);
         }
 
         [HttpPost("account-transactions/{accountNumber}")]
         public async Task<IActionResult> SyncTransactions([FromRoute] string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
-
-                // 1. Find the internal Database Account so we have its ID
-                var userAccounts = await _repo.GetUserAccountsAsync(userId);
-                var dbAccount = userAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
-
-                if (dbAccount == null) return NotFound("Account not found in your database. Please sync accounts first.");
-
-                if (dbAccount.ProviderName == "Internal")
-                {
-                    return BadRequest(new { message = "Internal accounts cannot be synced with external banks." });
-                }
-
-                var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
-                if (string.IsNullOrEmpty(consentId))
-                {
-                    return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
-                }
-
-                // 2. Fetch live transactions from the bank
-                var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate, consentId);
-
-                // 3. Get transactions we ALREADY saved for this account
-                var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id);
-
-                // 4. Prepare only the NEW transactions
-                var newTransactions = new List<AccountTransaction>();
-                foreach (var extTx in externalTransactions)
-                {
-                    if (!existingTxIds.Contains(extTx.TransactionId))
-                    {
-                        var newTx = new AccountTransaction
-                        {
-                            AccountListId = dbAccount.Id,
-                            TransactionId = extTx.TransactionId,
-                            TransactionName = extTx.TransactionName,
-                            Description = extTx.Description,
-                            TransactionType = extTx.TransactionType,
-                            Amount = extTx.Amount,
-                            Balance = extTx.Balance,
-                            TransactionDate = extTx.TransactionDate
-                        };
-                        newTransactions.Add(newTx);
-                    }
-                }
-
-                if (newTransactions.Count > 0)
-                {
-                    await _repo.SaveTransactionsAsync(newTransactions);
-                }
-
-                return Ok(externalTransactions);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred syncing transactions.", details = ex.Message });
-            }
+            var transactions = await _syncService.SyncTransactionsAsync(GetUserId(), accountNumber, startDate, endDate);
+            return Ok(transactions);
         }
+
         [HttpGet("receipt/{accountNumber}/{transactionId}")]
         public async Task<IActionResult> DownloadReceipt([FromRoute] string accountNumber, [FromRoute] string transactionId)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized("Invalid token.");
-
-            var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
-            if (string.IsNullOrEmpty(consentId))
-            {
-                return BadRequest(new { message = "You have not connected your Vakifbank account yet!" });
-            }
-            // 1. Get the raw PDF bytes from our service
-            byte[] pdfBytes = await _vakifbankService.GetReceiptPdfAsync(transactionId, accountNumber, consentId);
-
-            // 2. Return it as a downloadable file!
-            // The "application/pdf" tells the browser, "Hey, this is a PDF, open your PDF viewer!"
+            byte[] pdfBytes = await _syncService.GetReceiptPdfAsync(GetUserId(), accountNumber, transactionId);
             return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
-
         }
     }
 }

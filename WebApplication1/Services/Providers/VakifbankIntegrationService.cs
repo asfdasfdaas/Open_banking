@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,15 +14,24 @@ namespace WebApplication1.Services.Providers
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
+        private readonly IMemoryCache _cache;
 
-        public VakifbankIntegrationService(HttpClient httpClient, IConfiguration config)
+        public VakifbankIntegrationService(HttpClient httpClient, IConfiguration config, IMemoryCache cache)
         {
             _httpClient = httpClient;
             _config = config;
+            _cache = cache;
         }
 
         public async Task<string> GetBankTokenAsync(string consentId)
         {
+            string cacheKey = $"VakifbankToken_{consentId}";
+
+            if (_cache.TryGetValue(cacheKey, out string? cachedToken))
+            {
+                return cachedToken!; // Cache hit! Return it immediately.
+            }
+
             var requestBody = new Dictionary<string, string>
             {
                 { "client_id", _config["Vakifbank:ClientId"]! },
@@ -34,13 +45,20 @@ namespace WebApplication1.Services.Providers
             var content = new FormUrlEncodedContent(requestBody);
 
             var response = await _httpClient.PostAsync("/oauth2/token", content); // Replace with actual token URL path
-            response.EnsureSuccessStatusCode(); // Crashes safely if you get a 400 or 401
+            response.EnsureSuccessStatusCode(); // Crashes if you get a 400 or 401
 
             var jsonString = await response.Content.ReadAsStringAsync();
 
             var tokenData = JsonSerializer.Deserialize<TokenResponse>(jsonString);
 
-            return tokenData!.AccessToken;
+            var newToken = tokenData!.AccessToken;
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(50));
+
+            _cache.Set(cacheKey, newToken, cacheOptions);
+
+            return newToken;
         }
 
         public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId)
