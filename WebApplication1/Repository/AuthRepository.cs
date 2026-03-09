@@ -23,10 +23,10 @@ namespace WebApplication1.Repository
         {
             // 1. Identify what information (Claims) we want to "bake" into the token
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName)
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
 
             // 2. Get the Secret Key from appsettings.json
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
@@ -89,6 +89,21 @@ namespace WebApplication1.Repository
         public async Task<bool> EmailExists(string email)
         {
             return await _db.User.AnyAsync(x => x.Email == email.ToLower());
+        }
+
+        public async Task<string?> GetVakifbankConsentIdAsync(int userId)
+        {
+            var user = await _db.User.FirstOrDefaultAsync(u => u.Id == userId);
+            return user?.VakifbankConsentId;
+        }
+
+        public async Task<bool> SaveVakifbankConsentAsync(int userId, string consentId)
+        {
+            var user = await _db.User.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return false;
+
+            user.VakifbankConsentId = consentId;
+            return await _db.SaveChangesAsync() > 0;
         }
     }
 }

@@ -10,5 +10,6 @@
         public string AccountStatus { get; set; } = string.Empty; //Hesap durumu, A: Açık, K: Kapalı
         public DateTime LastTransactionDate { get; set; } //Son işlem tarihi
         public int AccountType { get; set; } //Hesap tipi
+        public string ProviderName { get; set; } = string.Empty;
     }
 }

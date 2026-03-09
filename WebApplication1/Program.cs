@@ -10,12 +10,19 @@ using WebApplication1.Services.Providers;
 using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddMemoryCache();
+
+builder.Services.AddCors();
+
+builder.Services.AddHttpClient<IBankIntegrationService, VakifbankIntegrationService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Vakifbank:BaseUrl"]!);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
@@ -23,8 +30,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
-builder.Services.AddScoped<IBankIntegrationService, VakifbankIntegrationService>();
+builder.Services.AddScoped<IVakifbankSyncService, VakifbankSyncService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
@@ -42,7 +48,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Open Banking API", Version = "v1" });
 
-    // This defines the "How" (Bearer Token)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -53,7 +58,6 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    // This defines the "Where" (Apply it to all endpoints)
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -79,7 +83,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(options =>
+    options.AllowAnyOrigin() // Or specify your frontend's exact URL
+           .AllowAnyMethod()
+           .AllowAnyHeader());
+
 app.UseHttpsRedirection();
+
+app.UseMiddleware<WebApplication1.Middleware.ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

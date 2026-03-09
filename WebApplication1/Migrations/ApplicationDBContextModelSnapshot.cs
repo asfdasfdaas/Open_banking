@@ -44,8 +44,14 @@ namespace WebApplication1.Migrations
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("BranchCode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomerNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("IBAN")
@@ -53,6 +59,9 @@ namespace WebApplication1.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LastTransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OpeningDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ProviderName")
@@ -70,6 +79,57 @@ namespace WebApplication1.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AccountLists");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.AccountTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountListId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountListId");
+
+                    b.ToTable("AccountTransactions");
                 });
 
             modelBuilder.Entity("WebApplication1.Models.User", b =>
@@ -92,6 +152,9 @@ namespace WebApplication1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("VakifbankConsentId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("User");
@@ -106,6 +169,22 @@ namespace WebApplication1.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.AccountTransaction", b =>
+                {
+                    b.HasOne("WebApplication1.Models.AccountList", "Account")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.AccountList", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("WebApplication1.Models.User", b =>

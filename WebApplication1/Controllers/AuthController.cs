@@ -68,7 +68,19 @@ namespace WebApplication1.Controllers
             {
                 return NotFound("User not found or already deleted.");
             }
-            return Ok(new { message = "User deleted successfully." });  
+            return Ok(new { message = "User deleted successfully." });
+        }
+        [Authorize]
+        [HttpPost("save-vakifbank-consent")]
+        public async Task<IActionResult> SaveVakifbankConsent([FromBody] string consentId)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+
+            var saved = await _repo.SaveVakifbankConsentAsync(userId, consentId);
+            if (!saved) return NotFound("User not found.");
+
+            return Ok(new { message = "Vakifbank connected successfully!" });
         }
     }
 }

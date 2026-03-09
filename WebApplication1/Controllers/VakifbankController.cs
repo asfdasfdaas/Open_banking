@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Interface;
 using WebApplication1.Interfaces;
 using WebApplication1.Models.External.Vakifbank;
 using WebApplication1.Services;
@@ -11,33 +12,47 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class VakifbankController : ControllerBase
     {
-        private readonly IBankIntegrationService _vakifbankService;
-        private readonly IAccountRepository _repo;
-        public VakifbankController(IBankIntegrationService vakifbankService, IAccountRepository repo)
-        {
-            _vakifbankService = vakifbankService;
-            _repo = repo;
-        }
+        private readonly IVakifbankSyncService _syncService;
 
-        [HttpPost("vakif-accounts")]
-        public async Task<IActionResult> GetAccounts()
+        public VakifbankController(IVakifbankSyncService syncService)
+        {
+            _syncService = syncService;
+        }
+        private int GetUserId()
         {
             try
             {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId)) throw new UnauthorizedAccessException("Invalid token.");
+            return userId;
+        }
 
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized("Invalid token.");
-                }
+        [HttpPost("vakif-accounts")]
+        public async Task<IActionResult> SyncAccounts()
+        {
+            var accounts = await _syncService.SyncAccountsAsync(GetUserId());
+            return Ok(accounts);
+        }
 
-                var accounts = await _vakifbankService.GetAccountsFromBankAsync(userId);
-                return Ok(accounts);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while fetching accounts.", details = ex.Message });
-            }
+        [HttpGet("account-detail/{accountNumber}")]
+        public async Task<IActionResult> GetAccountDetail([FromRoute] string accountNumber)
+        {
+            var detail = await _syncService.GetAndSyncAccountDetailAsync(GetUserId(), accountNumber);
+            return Ok(detail);
+        }
+
+        [HttpPost("account-transactions/{accountNumber}")]
+        public async Task<IActionResult> SyncTransactions([FromRoute] string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            var transactions = await _syncService.SyncTransactionsAsync(GetUserId(), accountNumber, startDate, endDate);
+            return Ok(transactions);
+        }
+
+        [HttpGet("receipt/{accountNumber}/{transactionId}")]
+        public async Task<IActionResult> DownloadReceipt([FromRoute] string accountNumber, [FromRoute] string transactionId)
+        {
+            byte[] pdfBytes = await _syncService.GetReceiptPdfAsync(GetUserId(), accountNumber, transactionId);
+            return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
         }
     }
 }
