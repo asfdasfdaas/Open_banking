@@ -20,11 +20,11 @@ namespace WebApplication1.Controllers
         }
         private int GetUserId()
         {
-            try
-            {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId)) throw new UnauthorizedAccessException("Invalid token.");
-            return userId;
+
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId)) throw new UnauthorizedAccessException("Invalid token.");
+                return userId;
+
         }
 
         [HttpPost("vakif-accounts")]
