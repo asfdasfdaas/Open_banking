@@ -3,11 +3,12 @@ import { BankApiService } from '../../services/bank-api';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -15,8 +16,8 @@ export class DashboardComponent implements OnInit {
   // This array will hold the accounts from .NET
   accounts: any[] = [];
   isLoading: boolean = true;
-
   newConsentId: string = '';
+  showConsentInput: boolean = false;
 
   // Inject the service
   constructor(
@@ -29,6 +30,10 @@ export class DashboardComponent implements OnInit {
   // This runs automatically when the page loads
   ngOnInit() {
     this.loadAccounts();
+  }
+
+  toggleConsentInput() {
+    this.showConsentInput = !this.showConsentInput;
   }
 
   navigate(path: string) {
@@ -87,6 +92,7 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         alert('Vakifbank Connected Successfully!');
         this.newConsentId = ''; // Clear the text box
+        this.showConsentInput = false;
         this.syncVakifbank(); // Automatically trigger a sync now that we are connected!
       },
       error: (err) => {

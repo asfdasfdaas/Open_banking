@@ -1,40 +1,91 @@
-<div class="dashboard-container">
+<div class="space-y-8 animate-fade-in">
 
-  <div style="background: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #ddd;">
-    <h3 style="margin-top: 0;">🔌 Connect Vakifbank</h3>
-    <p style="margin-bottom: 10px;">Enter your Consent ID to link your live bank accounts.</p>
+  <div class="flex justify-between items-start">
+    <div>
+      <h1 class="text-shadow-2xs/50 text-3xl font-bold text-slate-800">My Dashboard</h1>
+      <p class="text-slate-600 mt-1">Manage your internal and connected bank accounts.</p>
+    </div>
 
-    <input type="text" [(ngModel)]="newConsentId" placeholder="e.g. 12345-abcde..." style="padding: 8px; width: 250px;">
-    <button (click)="connectVakifbank()" style="margin-left: 10px; padding: 8px 15px;">Save Connection</button>
+    <div class="flex flex-col items-end gap-3">
+      <div class="flex gap-2">
+        <button (click)="toggleConsentInput()"
+                class="bg-white border border-slate-300 hover:bg-[#14213D] hover:text-slate-100 text-slate-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+          🔌 Connect Bank
+        </button>
+
+        <button (click)="syncVakifbank()"
+                class="bg-[#FFFFFF] hover:bg-[#14213D] hover:text-slate-100 text-black font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          Sync External
+        </button>
+      </div>
+
+      @if (showConsentInput) {
+      <div class="flex gap-2 bg-slate-100 p-2 rounded-lg border border-slate-200 shadow-sm transition-all animate-fade-in-down">
+        <input type="text"
+               [(ngModel)]="newConsentId"
+               placeholder="Consent ID..."
+               class="w-64 px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+        <button (click)="connectVakifbank()"
+                class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium px-4 py-1.5 rounded-md transition-colors shadow-sm">
+          Save
+        </button>
+      </div>
+      }
+    </div>
   </div>
 
-  <button (click)="navigate('/home')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
-    Go Back To Home Page
-  </button>
+  <div>
+    <h3 class="text-xl font-semibold text-slate-800 mb-4">Linked Accounts</h3>
 
-  <button (click)="syncVakifbank()" style="margin-bottom: 20px; padding: 8px 15px;">Sync Vakifbank Accounts</button>
-
-  <h3>My Accounts</h3>
-
-  @if (isLoading) {
-  <p style="color: blue;">Loading your accounts...</p>
-  }
-  @else if (accounts.length === 0) {
-  <p>No accounts found in the database. Click Sync above!</p>
-  }
-  @else {
-  <ul>
-    @for (account of accounts; track account.accountNumber) {
-    <li style="margin-bottom: 15px; padding: 10px; border: 1px solid #ccc;">
-      <strong>{{ account.providerName }}</strong> - {{ account.accountNumber }}
-      <br>
-      Balance: {{ account.balance }} {{ account.currencyCode }}
-      <br>
-      <button (click)="viewDetails(account.accountNumber)" style="margin-top: 10px;">
-        View Details & Transactions
-      </button>
-    </li>
+    @if (isLoading) {
+    <div class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-3 text-slate-500">Loading secure accounts...</span>
+    </div>
     }
-  </ul>
-  }
+    @else if (accounts.length === 0) {
+    <div class="text-center py-12 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+      <p class="text-slate-500">No accounts found in the database. Connect a bank or click Sync above!</p>
+    </div>
+    }
+    @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (account of accounts; track account.accountNumber) {
+      <div class="bg-[#E5E5E5] rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col">
+
+        <div class="flex justify-between items-start mb-4">
+          <span class="px-3 py-1 text-xs font-bold rounded-full"
+                [class.bg-yellow-100]="account.providerName === 'Vakifbank'"
+                [class.text-yellow-800]="account.providerName === 'Vakifbank'"
+                [class.bg-slate-100]="account.providerName === 'Internal'"
+                [class.text-slate-700]="account.providerName === 'Internal'">
+            {{ account.providerName }}
+          </span>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-md text-slate-800 mb-1">Available Balance</p>
+          <h2 class="text-3xl font-bold text-slate-900">
+            {{ account.balance | number:'1.2-2' }} <span class="text-lg text-slate-500 font-normal">{{ account.currencyCode }}</span>
+          </h2>
+        </div>
+
+        <p class="text-md text-slate-600 mb-4 flex-1">
+          {{ account.iban }}
+        </p>
+
+        <p class="text-[0.7rem] text-slate-600 font-mono mb-6">
+          {{ account.accountNumber }}
+        </p>
+
+        <button (click)="viewDetails(account.accountNumber)"
+                class="bg-[#fcba00] mt-auto w-full border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">
+          View Details & Transactions
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
 </div>

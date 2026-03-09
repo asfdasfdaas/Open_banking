@@ -1,76 +1,134 @@
-<div class="detail-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
-  <button (click)="goBack()" style="margin-bottom: 20px; padding: 5px 10px;">⬅ Back to Dashboard</button>
+  <button (click)="goBack()"
+          class="text-slate-500 hover:text-blue-600 font-medium mb-6 flex items-center gap-2 transition-colors">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+    Back to Dashboard
+  </button>
 
   @if (isLoading && !details) {
-  <p style="color: blue;">Loading secure account details...</p>
+  <div class="flex items-center gap-3 text-blue-600 font-medium py-8">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+    Loading secure account details...
+  </div>
   }
 
   @if (details) {
-  <div style="background: #f4f4f4; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 30px;">
-    <h2 style="margin-top: 0;">Account Overview</h2>
+  <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden border border-slate-700">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <p><strong>Account Number:</strong> {{ details.accountNumber }}</p>
-      <p><strong>Balance:</strong> {{ details.balance }} {{ details.currencyCode }}</p>
-      <p><strong>IBAN:</strong> {{ details.iban }}</p>
-      <p><strong>Status:</strong> {{ details.accountStatus === 'A' ? 'Active' : details.accountStatus }}</p>
+    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
+    <div class="absolute bottom-0 right-32 -mb-16 w-48 h-48 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
 
-      @if (details.branchCode) {
-      <p><strong>Branch Code:</strong> {{ details.branchCode }}</p>
-      }
+    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
 
-      @if (details.customerNumber) {
-      <p><strong>Customer No:</strong> {{ details.customerNumber }}</p>
-      }
+      <div>
+        <p class="text-slate-300 text-sm font-medium tracking-wider uppercase mb-1">Available Balance</p>
+        <h2 class="text-5xl font-bold mb-4 text-shadow-md text-shadow-black/50 tracking-tight">
+          {{ details.balance | number:'1.2-2' }} <span class="text-2xl font-normal text-slate-300">{{ details.currencyCode }}</span>
+        </h2>
+        <p class="font-mono text-lg text-slate-200 tracking-widest text-shadow-sm">
+          {{ details.accountNumber }}
+        </p>
+      </div>
 
-      @if (details.openingDate && details.openingDate !== '0001-01-01T00:00:00') {
-      <p><strong>Opening Date:</strong> {{ details.openingDate | date:'mediumDate' }}</p>
-      }
+      <div class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-slate-300 text-right">
+        <div>
+          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">Status</span>
+          <span class="font-medium text-white">{{ details.accountStatus === 'A' ? 'Active' : details.accountStatus }}</span>
+        </div>
+        <div>
+          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
+          <span class="font-mono text-white">{{ details.iban || 'N/A' }}</span>
+        </div>
+
+        @if (details.branchCode) {
+        <div>
+          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">Branch</span>
+          <span class="font-medium text-white">{{ details.branchCode }}</span>
+        </div>
+        }
+
+        @if (details.customerNumber) {
+        <div>
+          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">Customer No</span>
+          <span class="font-mono text-white">{{ details.customerNumber }}</span>
+        </div>
+        }
+      </div>
     </div>
   </div>
 
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-    <h3 style="margin: 0;">Recent Transactions</h3>
-    <button (click)="syncTransactions()" [disabled]="isLoading" style="padding: 8px 15px;">
-      Sync Last 300 Days
+  <div class="flex justify-between items-end mb-6">
+    <div>
+      <h3 class="text-2xl font-bold text-slate-800">Transaction History</h3>
+      <p class="text-slate-500 text-sm mt-1">Your ledger for the last 30 days</p>
+    </div>
+    <button (click)="syncTransactions()"
+            [disabled]="isLoading"
+            class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      Sync Bank
     </button>
   </div>
 
   @if (isLoading && details) {
-  <p style="color: blue;">Fetching live transactions from Vakifbank...</p>
+  <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100 mb-4">
+    <div class="flex-1 space-y-4 py-1">
+      <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+      <div class="space-y-2">
+        <div class="h-4 bg-slate-200 rounded"></div>
+        <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+      </div>
+    </div>
+  </div>
   }
 
   @if (transactions.length === 0 && !isLoading) {
-  <p style="color: #666;">No transactions loaded. Click sync above!</p>
+  <div class="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+    <span class="text-4xl mb-3 block">🧾</span>
+    <h4 class="text-lg font-semibold text-slate-700">No recent transactions</h4>
+    <p class="text-slate-500 mt-1">Click sync above to fetch data from the bank.</p>
+  </div>
   }
   @else {
-  <ul style="list-style-type: none; padding-left: 0;">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
     @for (tx of transactions; track tx.transactionId) {
-    <li style="border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px; background: white;">
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <strong style="color: #555;">{{ tx.transactionDate | date:'medium' }}</strong>
-          <h4 style="margin: 5px 0;">{{ tx.description || tx.transactionName }}</h4>
-          <p style="margin: 0; font-size: 1.1em;">
-            Amount:
-            <span [style.color]="tx.amount < 0 ? 'red' : 'green'">
-              {{ tx.amount }} {{ details.currencyCode }}
-            </span>
-          </p>
+    <div class="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
+
+      <div class="flex gap-4 items-center">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-sm"
+             [class.bg-green-100]="tx.amount > 0" [class.text-green-600]="tx.amount > 0"
+             [class.bg-red-100]="tx.amount < 0" [class.text-red-600]="tx.amount < 0"
+             [class.bg-slate-100]="tx.amount === 0" [class.text-slate-600]="tx.amount === 0">
+          {{ tx.amount > 0 ? '+' : (tx.amount < 0 ? '-' : '=') }}
         </div>
 
         <div>
-          <button (click)="downloadReceipt(tx.transactionId)" style="padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            📄 Download PDF Receipt
-          </button>
+          <h4 class="font-semibold text-slate-800 text-lg leading-tight">{{ tx.description || tx.transactionName }}</h4>
+          <p class="text-sm text-slate-500 mt-0.5 font-medium">{{ tx.transactionDate | date:'medium' }}</p>
         </div>
       </div>
 
-    </li>
+      <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+        <div class="text-right">
+          <span class="font-bold text-lg whitespace-nowrap"
+                [class.text-green-600]="tx.amount > 0"
+                [class.text-slate-800]="tx.amount <= 0">
+            {{ tx.amount | number:'1.2-2' }} {{ details.currencyCode }}
+          </span>
+        </div>
+
+        <button (click)="downloadReceipt(tx.transactionId)"
+                class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          PDF
+        </button>
+      </div>
+
+    </div>
     }
-  </ul>
+  </div>
   }
   }
 </div>
