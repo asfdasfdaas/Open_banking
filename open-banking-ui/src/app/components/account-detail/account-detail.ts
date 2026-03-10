@@ -3,12 +3,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BankApiService } from '../../services/bank-api';
 import { FormsModule } from '@angular/forms';
-import { IbanPipe } from '../../pipes/iban-pipe'; // Make sure this path is correct for your project!
+import { IbanPipe } from '../../pipes/iban-pipe';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 
 @Component({
   selector: 'app-account-detail',
   standalone: true,
-  imports: [CommonModule, IbanPipe, FormsModule],
+  imports: [CommonModule, IbanPipe, FormsModule, BaseChartDirective],
   templateUrl: './account-detail.html',
   styleUrl: './account-detail.scss'
 })
@@ -22,6 +24,28 @@ export class AccountDetailComponent implements OnInit {
   totalIncome: number = 0;
   totalExpense: number = 0;
   netTotal: number = 0;
+
+  public doughnutChartLabels: string[] = ['Income', 'Expenses'];
+  public doughnutChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [
+    
+    { data: [0, 0], backgroundColor: ['#16a34a', '#dc2626'], hoverOffset: 4 }
+  ];
+  public doughnutChartOptions: ChartOptions<'doughnut'> = { responsive: true, maintainAspectRatio: false };
+
+  public lineChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [], // This will hold the dates
+    datasets: [
+      {
+        data: [], // This will hold the balances
+        label: 'Daily Balance',
+        fill: true,
+        tension: 0.1, // This makes the line beautifully curved instead of jagged!
+        borderColor: '#2563eb', // Blue-600
+        backgroundColor: 'rgba(37, 99, 235, 0.1)' // Very faint blue underneath the line
+      }
+    ]
+  };
+  public lineChartOptions: ChartOptions<'line'> = { responsive: true, maintainAspectRatio: false };
 
   constructor(
     private route: ActivatedRoute,
@@ -76,7 +100,6 @@ export class AccountDetailComponent implements OnInit {
     endObj.setHours(23, 59, 59, 999);
     const endIso = endObj.toISOString();
 
-    // Make the single, correct API call
     this.bankApi.syncTransactions(this.accountNumber, startIso, endIso).subscribe({
       next: (data) => {
         this.transactions = data.$values ? data.$values : data;
@@ -95,15 +118,37 @@ export class AccountDetailComponent implements OnInit {
     this.totalIncome = 0;
     this.totalExpense = 0;
 
-    for (const tx of this.transactions) {
+
+    this.transactions.sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime());
+
+
+    const chartTx = [...this.transactions].reverse();
+
+    const balanceData: number[] = [];
+    const dateLabels: string[] = [];
+
+
+    for (const tx of chartTx) {
       if (tx.amount > 0) {
         this.totalIncome += tx.amount;
       } else if (tx.amount < 0) {
         this.totalExpense += Math.abs(tx.amount);
       }
+
+      // Add data points for the line chart
+      balanceData.push(tx.balance);
+
+      // Format the date label to just show "MM/DD"
+      const dateObj = new Date(tx.transactionDate);
+      dateLabels.push(`${dateObj.getMonth() + 1}/${dateObj.getDate()}`);
     }
 
     this.netTotal = this.totalIncome - this.totalExpense;
+
+    // Inject the calculated data into the chart objects
+    this.doughnutChartDatasets[0].data = [this.totalIncome, this.totalExpense];
+    this.lineChartData.labels = dateLabels;
+    this.lineChartData.datasets[0].data = balanceData;
   }
 
   downloadReceipt(transactionId: string) {

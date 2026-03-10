@@ -19,8 +19,7 @@ export class RegisterComponent {
   onRegister() {
     this.authService.register(this.userData).subscribe({
       next: () => {
-        alert('Account created successfully! Please log in.');
-        this.router.navigate(['/login']); // Teleport them to login
+        this.router.navigate(['/login']);
       },
       error: (err) => {
         this.errorMessage = err.error || 'Failed to create account.';

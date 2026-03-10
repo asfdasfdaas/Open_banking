@@ -66,7 +66,6 @@ export class DashboardComponent implements OnInit {
     this.isLoading = true;
     this.bankApi.syncVakifbankAccounts().subscribe({
       next: (response) => {
-        alert('Sync Successful!');
         this.loadAccounts();
       },
       error: (err) => {

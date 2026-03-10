@@ -29,6 +29,9 @@ export class App {
   logout() {
     this.authService.logout();
     this.isLoggedIn = false;
+    if (window.location.pathname == '/') {
+      window.location.reload();
+    }
     this.router.navigate(['/']); // Kick them back to the home page
   }
 }

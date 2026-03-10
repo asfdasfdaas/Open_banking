@@ -1,11 +1,13 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
-  <button (click)="goBack()"
+<!--Back to dashboard button-->
+  <button (click)="goBack()" 
           class="text-slate-500 hover:text-blue-600 font-medium mb-6 flex items-center gap-2 transition-colors">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
     Back to Dashboard
   </button>
 
+<!--Loading-->
   @if (isLoading && !details) {
   <div class="flex items-center gap-3 text-blue-600 font-medium py-8">
     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -13,6 +15,7 @@
   </div>
   }
 
+<!--Main account detail info card-->
   @if (details) {
   <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden border border-slate-700">
 
@@ -61,6 +64,7 @@
     </div>
   </div>
 
+<!--transaction date range-->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
     <div>
       <h3 class="text-2xl font-bold text-slate-800">Transaction History</h3>
@@ -88,6 +92,7 @@
     </div>
   </div>
 
+<!--Income, expense, net total card-->
   @if (transactions.length > 0 && !isLoading) {
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-fade-in-down">
 
@@ -129,6 +134,41 @@
   </div>
   }
 
+<!--Income/Expense and Balance Trend Graph-->
+  @if (transactions.length > 1 && !isLoading) {
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in-up">
+
+<!--Income/Expense-->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-80 hover:shadow-md transition-shadow">
+      <h4 class="text-slate-500 font-semibold mb-2 text-center uppercase tracking-wider text-sm">Cash Flow Ratio</h4>
+
+      <div class="relative flex-grow w-full min-h-0 pb-2">
+        <canvas baseChart
+                [labels]="doughnutChartLabels"
+                [datasets]="doughnutChartDatasets"
+                [options]="doughnutChartOptions"
+                [legend]="true"
+                type="doughnut">
+        </canvas>
+      </div>
+    </div>
+
+<!--Balance trend-->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col h-80 hover:shadow-md transition-shadow">
+      <h4 class="text-slate-500 font-semibold mb-2 uppercase tracking-wider text-sm">Balance Trend</h4>
+      <div class="flex-grow relative w-full">
+        <canvas baseChart
+                [data]="lineChartData"
+                [options]="lineChartOptions"
+                type="line">
+        </canvas>
+      </div>
+    </div>
+
+  </div>
+  }
+
+<!--Loading-->
   @if (isLoading && details) {
   <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100 mb-4">
     <div class="flex-1 space-y-4 py-1">
@@ -141,6 +181,7 @@
   </div>
   }
 
+<!--If no transaction-->
   @if (transactions.length === 0 && !isLoading) {
   <div class="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
     <span class="text-4xl mb-3 block">🧾</span>
@@ -148,6 +189,7 @@
     <p class="text-slate-500 mt-1">Click sync above to fetch data from the bank.</p>
   </div>
   }
+<!--Transaction list-->
   @else {
   <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
     @for (tx of transactions; track tx.transactionId) {
