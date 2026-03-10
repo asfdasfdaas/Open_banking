@@ -25,7 +25,7 @@ export class HomeComponent implements OnInit {
 
   quit() {
     this.authService.logout();
-    this.isUserLoggedIn = false; // Update the UI immediately
-    alert('You have successfully logged out.');
+    this.isUserLoggedIn = false;
+    window.location.reload();
   }
 }

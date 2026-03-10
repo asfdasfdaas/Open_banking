@@ -42,7 +42,7 @@
           <p class="font-mono text-lg text-slate-200 tracking-widest text-shadow-sm">
             {{ details.accountNumber }}
           </p>
-          </div>
+        </div>
 
         @if (details.branchCode) {
         <div>
@@ -87,6 +87,47 @@
       </button>
     </div>
   </div>
+
+  @if (transactions.length > 0 && !isLoading) {
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-fade-in-down">
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+      <div>
+        <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Income</p>
+        <p class="text-2xl font-bold text-green-600">
+          +{{ totalIncome | number:'1.2-2' }} <span class="text-sm font-normal">{{ details?.currencyCode }}</span>
+        </p>
+      </div>
+
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+      <div>
+        <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Expenses</p>
+        <p class="text-2xl font-bold text-red-600">
+          -{{ totalExpense | number:'1.2-2' }} <span class="text-sm font-normal">{{ details?.currencyCode }}</span>
+        </p>
+      </div>
+
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-50"></div>
+
+      <div class="relative z-10">
+        <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Net Flow</p>
+        <p class="text-2xl font-bold"
+           [class.text-green-600]="netTotal > 0"
+           [class.text-red-600]="netTotal < 0"
+           [class.text-slate-800]="netTotal === 0">
+          {{ netTotal > 0 ? '+' : '' }}{{ netTotal | number:'1.2-2' }} <span class="text-sm font-normal">{{ details?.currencyCode }}</span>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+  }
 
   @if (isLoading && details) {
   <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100 mb-4">
@@ -144,5 +185,5 @@
     }
   </div>
   }
-}
+  }
 </div>

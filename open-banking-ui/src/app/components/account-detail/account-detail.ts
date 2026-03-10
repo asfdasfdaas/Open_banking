@@ -17,9 +17,11 @@ export class AccountDetailComponent implements OnInit {
   details: any = null;
   transactions: any[] = [];
   isLoading: boolean = true;
-
   startDate: string = '';
   endDate: string = '';
+  totalIncome: number = 0;
+  totalExpense: number = 0;
+  netTotal: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -78,6 +80,7 @@ export class AccountDetailComponent implements OnInit {
     this.bankApi.syncTransactions(this.accountNumber, startIso, endIso).subscribe({
       next: (data) => {
         this.transactions = data.$values ? data.$values : data;
+        this.calculateTotals();
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -86,6 +89,21 @@ export class AccountDetailComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  calculateTotals() {
+    this.totalIncome = 0;
+    this.totalExpense = 0;
+
+    for (const tx of this.transactions) {
+      if (tx.amount > 0) {
+        this.totalIncome += tx.amount;
+      } else if (tx.amount < 0) {
+        this.totalExpense += Math.abs(tx.amount);
+      }
+    }
+
+    this.netTotal = this.totalIncome - this.totalExpense;
   }
 
   downloadReceipt(transactionId: string) {
