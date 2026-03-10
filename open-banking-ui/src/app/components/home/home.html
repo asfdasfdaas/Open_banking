@@ -1,29 +1,75 @@
-<div class="home-container" style="max-width: 600px; margin: 100px auto; text-align: center; padding: 40px; border-radius: 8px; background: #f9f9f9; border: 1px solid #ddd;">
+<div class="min-h-[85vh] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
 
-  <h1 style="color: #333; margin-bottom: 10px;">🏦 Open Banking Portal</h1>
-  <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
-    Manage all your internal and external bank accounts in one secure, unified dashboard.
-  </p>
+  <div class="text-center max-w-4xl mx-auto mb-16 mt-8">
 
-  <div style="display: flex; gap: 15px; justify-content: center;">
+    <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6">
+      Next-Generation <br />
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 pb-2 inline-block">
+        Open Banking
+      </span>
+    </h1>
 
-    @if (isUserLoggedIn) {
-    <button (click)="navigate('/dashboard')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
-      📊 Go to Dashboard
-    </button>
-    <button (click)="quit()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
-      🚪 Quit / Log Out
-    </button>
-    }
+    <p class="text-xl md:text-2xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+      Manage all your internal and connected external bank accounts in one secure, unified dashboard. Experience financial clarity like never before.
+    </p>
 
-    @else {
-    <button (click)="navigate('/login')" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
-      🔑 Log In
-    </button>
-    <button (click)="navigate('/register')" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
-      📝 Create Account
-    </button>
-    }
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+      @if (isUserLoggedIn) {
+      <button (click)="navigate('/dashboard')"
+              class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-1">
+        Go to Dashboard
+      </button>
+      <button (click)="quit()"
+              class="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-700 hover:text-red-600 text-lg font-semibold rounded-xl transition-all">
+        Sign Out
+      </button>
+      }
+      @else {
+      <button (click)="navigate('/register')"
+              class="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white text-lg font-semibold rounded-xl shadow-lg shadow-slate-300 transition-all hover:-translate-y-1">
+        Get Started
+      </button>
+      <button (click)="navigate('/login')"
+              class="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 text-lg font-semibold rounded-xl transition-all">
+        Sign In
+      </button>
+      }
+
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
+
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">
+      <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner">
+        🔗
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-3">Live Bank Sync</h3>
+      <p class="text-slate-500 leading-relaxed">
+        Connect directly to Vakifbank and other providers to see your real-time available balances instantly.
+      </p>
+    </div>
+
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">
+      <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner">
+        🧾
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-3">Smart Ledgers</h3>
+      <p class="text-slate-500 leading-relaxed">
+        Track every transaction with crystal clear details and instant, native PDF receipt downloads.
+      </p>
+    </div>
+
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">
+      <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner">
+        🛡️
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-3">Bank-Grade Security</h3>
+      <p class="text-slate-500 leading-relaxed">
+        Your connection is secured with industry-standard JWT authentication and dynamic consent tokens.
+      </p>
+    </div>
 
   </div>
 </div>

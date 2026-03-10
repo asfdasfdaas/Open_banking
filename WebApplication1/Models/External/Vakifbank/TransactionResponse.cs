@@ -36,9 +36,11 @@ namespace WebApplication1.Models.External.Vakifbank
         public string CurrencyCode { get; set; } = string.Empty;
 
         [JsonPropertyName("Amount")]
+        [JsonConverter(typeof(SafeDecimalConverter))]
         public decimal Amount { get; set; }
 
         [JsonPropertyName("Balance")]
+        [JsonConverter(typeof(SafeDecimalConverter))]
         public decimal Balance { get; set; }
 
         [JsonPropertyName("TransactionDate")]

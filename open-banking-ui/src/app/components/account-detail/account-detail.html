@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
   <button (click)="goBack()"
           class="text-slate-500 hover:text-blue-600 font-medium mb-6 flex items-center gap-2 transition-colors">
@@ -26,20 +26,23 @@
         <h2 class="text-5xl font-bold mb-4 text-shadow-md text-shadow-black/50 tracking-tight">
           {{ details.balance | number:'1.2-2' }} <span class="text-2xl font-normal text-slate-300">{{ details.currencyCode }}</span>
         </h2>
-        <p class="font-mono text-lg text-slate-200 tracking-widest text-shadow-sm">
-          {{ details.accountNumber }}
-        </p>
+        <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
+        <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
+
       </div>
 
       <div class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-slate-300 text-right">
         <div>
+
           <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">Status</span>
           <span class="font-medium text-white">{{ details.accountStatus === 'A' ? 'Active' : details.accountStatus }}</span>
         </div>
         <div>
-          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
-          <span class="font-mono text-white">{{ details.iban || 'N/A' }}</span>
-        </div>
+          <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">Customer No</span>
+          <p class="font-mono text-lg text-slate-200 tracking-widest text-shadow-sm">
+            {{ details.accountNumber }}
+          </p>
+          </div>
 
         @if (details.branchCode) {
         <div>
@@ -58,17 +61,31 @@
     </div>
   </div>
 
-  <div class="flex justify-between items-end mb-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
     <div>
       <h3 class="text-2xl font-bold text-slate-800">Transaction History</h3>
-      <p class="text-slate-500 text-sm mt-1">Your ledger for the last 30 days</p>
+      <p class="text-slate-500 text-sm mt-1">Select a date range to sync with the bank</p>
     </div>
-    <button (click)="syncTransactions()"
-            [disabled]="isLoading"
-            class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-      Sync Bank
-    </button>
+
+    <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex-wrap">
+
+      <input type="date"
+             [(ngModel)]="startDate"
+             class="text-sm px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer hover:bg-white transition-colors">
+
+      <span class="text-slate-400 text-sm font-medium">to</span>
+
+      <input type="date"
+             [(ngModel)]="endDate"
+             class="text-sm px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer hover:bg-white transition-colors">
+
+      <button (click)="syncTransactions()"
+              [disabled]="isLoading"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 ml-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+        Sync
+      </button>
+    </div>
   </div>
 
   @if (isLoading && details) {
@@ -97,12 +114,7 @@
     <div class="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
 
       <div class="flex gap-4 items-center">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-sm"
-             [class.bg-green-100]="tx.amount > 0" [class.text-green-600]="tx.amount > 0"
-             [class.bg-red-100]="tx.amount < 0" [class.text-red-600]="tx.amount < 0"
-             [class.bg-slate-100]="tx.amount === 0" [class.text-slate-600]="tx.amount === 0">
-          {{ tx.amount > 0 ? '+' : (tx.amount < 0 ? '-' : '=') }}
-        </div>
+
 
         <div>
           <h4 class="font-semibold text-slate-800 text-lg leading-tight">{{ tx.description || tx.transactionName }}</h4>
@@ -112,10 +124,12 @@
 
       <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
         <div class="text-right">
-          <span class="font-bold text-lg whitespace-nowrap"
+          <span class="font-bold text-xl whitespace-nowrap"
                 [class.text-green-600]="tx.amount > 0"
-                [class.text-slate-800]="tx.amount <= 0">
-            {{ tx.amount | number:'1.2-2' }} {{ details.currencyCode }}
+                [class.text-red-600]="tx.amount < 0"
+                [class.text-slate-800]="tx.amount === 0">
+
+            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number:'1.2-2' }} {{ details.currencyCode }}
           </span>
         </div>
 
@@ -130,5 +144,5 @@
     }
   </div>
   }
-  }
+}
 </div>

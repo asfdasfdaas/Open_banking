@@ -1,12 +1,14 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router'; // To read the URL and navigate back
-import { CommonModule } from '@angular/common'; // Required to format dates in HTML
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { BankApiService } from '../../services/bank-api';
+import { FormsModule } from '@angular/forms';
+import { IbanPipe } from '../../pipes/iban-pipe'; // Make sure this path is correct for your project!
 
 @Component({
   selector: 'app-account-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IbanPipe, FormsModule],
   templateUrl: './account-detail.html',
   styleUrl: './account-detail.scss'
 })
@@ -16,6 +18,9 @@ export class AccountDetailComponent implements OnInit {
   transactions: any[] = [];
   isLoading: boolean = true;
 
+  startDate: string = '';
+  endDate: string = '';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -24,11 +29,23 @@ export class AccountDetailComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // 1. Grab the "12345" out of "localhost:4200/account/12345"
+    // 1. Calculate the dates
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 30);
+
+    // 2. Format them as YYYY-MM-DD so the HTML Date Picker can read them!
+    this.endDate = end.toISOString().split('T')[0];
+    this.startDate = start.toISOString().split('T')[0];
+
+    // 3. Grab the account number
     this.accountNumber = this.route.snapshot.paramMap.get('accountNumber') || '';
 
     if (this.accountNumber) {
       this.loadDetails();
+
+      // 4. Auto-sync transactions immediately on page load
+      this.syncTransactions();
     }
   }
 
@@ -50,18 +67,17 @@ export class AccountDetailComponent implements OnInit {
   syncTransactions() {
     this.isLoading = true;
 
-    // Automatically generate dates for the last 300 days
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 300);
+    // Read the dates from the HTML inputs
+    const startIso = new Date(this.startDate).toISOString();
 
-    // Convert them to the ISO format that .NET expects
-    const startStr = startDate.toISOString();
-    const endStr = endDate.toISOString();
+    const endObj = new Date(this.endDate);
+    endObj.setHours(23, 59, 59, 999);
+    const endIso = endObj.toISOString();
 
-    this.bankApi.syncTransactions(this.accountNumber, startStr, endStr).subscribe({
+    // Make the single, correct API call
+    this.bankApi.syncTransactions(this.accountNumber, startIso, endIso).subscribe({
       next: (data) => {
-        this.transactions = data.$values ? data.$values : data; // Handle .NET JSON wrapping safely
+        this.transactions = data.$values ? data.$values : data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -75,15 +91,13 @@ export class AccountDetailComponent implements OnInit {
   downloadReceipt(transactionId: string) {
     this.bankApi.downloadReceipt(this.accountNumber, transactionId).subscribe({
       next: (blob: Blob) => {
-        // We take the raw bytes, create a hidden browser link, and simulate a click to download it.
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Receipt_${transactionId}.pdf`; // Name the file
+        a.download = `Receipt_${transactionId}.pdf`;
         document.body.appendChild(a);
         a.click();
 
-        // Clean up memory
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
