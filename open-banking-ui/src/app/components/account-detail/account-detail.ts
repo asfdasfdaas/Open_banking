@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { IbanPipe } from '../../pipes/iban-pipe';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-account-detail',
@@ -51,7 +52,8 @@ export class AccountDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private bankApi: BankApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toastService: ToastService
   ) { }
 
   ngOnInit() {
@@ -73,6 +75,17 @@ export class AccountDetailComponent implements OnInit {
       // 4. Auto-sync transactions immediately on page load
       this.syncTransactions();
     }
+  }
+
+  copyToClipboard(text: string) {
+    if (!text) return;
+
+    // Use the native browser clipboard API
+    navigator.clipboard.writeText(text).then(() => {
+      this.toastService.show('IBAN copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
   }
 
   loadDetails() {
@@ -104,6 +117,7 @@ export class AccountDetailComponent implements OnInit {
       next: (data) => {
         this.transactions = data.$values ? data.$values : data;
         this.calculateTotals();
+        this.toastService.show('Transactions successfully synced', 'info');
         this.isLoading = false;
         this.cdr.detectChanges();
       },

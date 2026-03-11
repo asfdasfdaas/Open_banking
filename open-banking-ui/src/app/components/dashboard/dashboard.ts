@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { IbanPipe } from '../../pipes/iban-pipe';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, IbanPipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -24,7 +26,8 @@ export class DashboardComponent implements OnInit {
     private bankApi: BankApiService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) { }
 
   // This runs automatically when the page loads
@@ -38,6 +41,18 @@ export class DashboardComponent implements OnInit {
 
   navigate(path: string) {
     this.router.navigate([path]);
+  }
+
+  copyToClipboard(text: string) {
+    if (!text) return;
+
+    // Use the native browser clipboard API
+    navigator.clipboard.writeText(text).then(() => {
+      // For now, a simple alert. Later, you could trigger a beautiful Toast!
+      this.toastService.show('IBAN copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
   }
 
   loadAccounts() {

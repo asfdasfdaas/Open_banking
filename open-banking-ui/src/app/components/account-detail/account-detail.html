@@ -30,7 +30,17 @@
           {{ details.balance | number:'1.2-2' }} <span class="text-2xl font-normal text-slate-300">{{ details.currencyCode }}</span>
         </h2>
         <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
-        <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
+        <div class="flex items-center justify-end gap-2">
+          <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
+
+          <button (click)="copyToClipboard(details.iban)"
+                  class="text-slate-400 hover:text-white transition-colors focus:outline-none"
+                  title="Copy IBAN">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+        </div>
 
       </div>
 
