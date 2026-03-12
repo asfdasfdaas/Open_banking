@@ -23,7 +23,7 @@ namespace WebApplication1.Repository
             return await _db.AccountLists.ToListAsync();
         }
         public async Task<IEnumerable<AccountList>> GetUserAccountsAsync(int userId)
-        {
+        {   
             return await _db.AccountLists
                 .Where(x => x.UserId == userId)
                 .ToListAsync();

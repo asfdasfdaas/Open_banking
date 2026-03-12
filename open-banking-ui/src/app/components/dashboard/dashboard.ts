@@ -87,7 +87,7 @@ export class DashboardComponent implements OnInit {
         console.error('Sync failed', err);
         // If your .NET API returns a 400 because they haven't connected yet:
         if (err.status === 400) {
-          alert(err.error.message || 'Please connect your Vakifbank account first.');
+          this.toastService.show('Please connect your vakıfbank account first', 'error');
         }
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -98,20 +98,20 @@ export class DashboardComponent implements OnInit {
   }
   connectVakifbank() {
     if (!this.newConsentId) {
-      alert('Please enter a Consent ID');
+      this.toastService.show('Please enter a consetn Id', 'error');
       return;
     }
 
     this.authService.saveVakifbankConsent(this.newConsentId).subscribe({
       next: (res) => {
-        alert('Vakifbank Connected Successfully!');
+        this.toastService.show('Vakıfbank connected successfuly', 'success');
         this.newConsentId = ''; // Clear the text box
         this.showConsentInput = false;
         this.syncVakifbank(); // Automatically trigger a sync now that we are connected!
       },
       error: (err) => {
         console.error('Failed to connect bank', err);
-        alert('Failed to connect. Check console.');
+        this.toastService.show('Filed to connect', 'error');
       }
     });
   }
