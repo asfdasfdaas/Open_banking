@@ -80,7 +80,8 @@ namespace WebApplication1.Services
                     AccountType = dbAccount.AccountType,
                     OpeningDate = dbAccount.OpeningDate,
                     CustomerNumber = dbAccount.CustomerNumber!,
-                    BranchCode = dbAccount.BranchCode!
+                    BranchCode = dbAccount.BranchCode!,
+                    ProviderName = dbAccount.ProviderName
                 };
             }
 

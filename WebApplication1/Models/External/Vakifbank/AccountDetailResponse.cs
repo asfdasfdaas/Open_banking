@@ -48,5 +48,8 @@ namespace WebApplication1.Models.External.Vakifbank
 
         [JsonPropertyName("AccountNumber")]
         public string AccountNumber { get; set; } = string.Empty;
+
+        [JsonPropertyName("ProviderName")]
+        public string ProviderName { get; set; } = string.Empty;
     }
 }

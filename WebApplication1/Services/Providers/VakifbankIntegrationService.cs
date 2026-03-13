@@ -137,7 +137,8 @@ namespace WebApplication1.Services.Providers
                 AccountType = info.AccountType,
                 OpeningDate = info.OpeningDate,
                 CustomerNumber = info.CustomerNumber,
-                BranchCode = info.BranchCode
+                BranchCode = info.BranchCode,
+                ProviderName = info.ProviderName
             };
         }
 

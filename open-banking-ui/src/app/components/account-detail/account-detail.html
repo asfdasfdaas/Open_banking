@@ -39,7 +39,7 @@
         }
         <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
         <div class="flex items-center justify-end gap-2">
-          <span class="font-mono text-white tracking-widest">{{ details.providerName}}</span>
+          <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
 
           <button (click)="copyToClipboard(details.iban)"
                   class="text-slate-400 hover:text-white transition-colors focus:outline-none"
