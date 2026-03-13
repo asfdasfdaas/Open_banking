@@ -146,7 +146,7 @@ namespace WebApplication1.Services.Providers
             var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // Build the request body EXACTLY like your Postman example
+            // Build the request body EXACTLY like Postman
             var requestBody = JsonSerializer.Serialize(new
             {
                 AccountNumber = accountNumber,

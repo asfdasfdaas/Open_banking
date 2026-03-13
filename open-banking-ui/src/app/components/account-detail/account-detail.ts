@@ -124,6 +124,8 @@ export class AccountDetailComponent implements OnInit {
       error: (err) => {
         console.error('Failed to sync transactions', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
+        this.toastService.show('Failed to sync transactions. Please try again later.', 'error');
       }
     });
   }
