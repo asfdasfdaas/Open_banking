@@ -11,9 +11,11 @@ namespace WebApplication1.Interfaces
         Task CreateAsync(AccountList account);
         Task UpdateAsync(AccountList account);
         Task DeleteAsync(AccountList account);
+        Task<IEnumerable<AccountTransaction>> GetAccountTransactionsAsync(int accountId, DateTime startDate, DateTime endDate);
         Task<bool> SaveAsync();
         Task<List<string>> GetExistingTransactionIdsAsync(int accountId, DateTime startDate, DateTime endDate);
         Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions);
+        Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto);
     }
 }
 

@@ -14,5 +14,6 @@
         public DateTime? OpeningDate { get; set; }
         public string CustomerNumber { get; set; } = string.Empty;
         public string BranchCode { get; set; } = string.Empty;
+        public string ProviderName { get; set; } = string.Empty;
     }
 }

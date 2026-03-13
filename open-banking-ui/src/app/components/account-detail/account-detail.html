@@ -1,13 +1,13 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
-<!--Back to dashboard button-->
-  <button (click)="goBack()" 
+  <!--Back to dashboard button-->
+  <button (click)="goBack()"
           class="text-slate-500 hover:text-blue-600 font-medium mb-6 flex items-center gap-2 transition-colors">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
     Back to Dashboard
   </button>
 
-<!--Loading-->
+  <!--Loading-->
   @if (isLoading && !details) {
   <div class="flex items-center gap-3 text-blue-600 font-medium py-8">
     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -15,7 +15,7 @@
   </div>
   }
 
-<!--Main account detail info card-->
+  <!--Main account detail info card-->
   @if (details) {
   <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden border border-slate-700">
 
@@ -29,9 +29,17 @@
         <h2 class="text-5xl font-bold mb-4 text-shadow-md text-shadow-black/50 tracking-tight">
           {{ details.balance | number:'1.2-2' }} <span class="text-2xl font-normal text-slate-300">{{ details.currencyCode }}</span>
         </h2>
+
+        @if (details.providerName === 'Internal') {
+        <button (click)="openTransferModal()"
+                class="mb-4 bg-blue-500 hover:bg-blue-400 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+          Transfer Money
+        </button>
+        }
         <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
         <div class="flex items-center justify-end gap-2">
-          <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
+          <span class="font-mono text-white tracking-widest">{{ details.providerName}}</span>
 
           <button (click)="copyToClipboard(details.iban)"
                   class="text-slate-400 hover:text-white transition-colors focus:outline-none"
@@ -72,9 +80,10 @@
         }
       </div>
     </div>
+
   </div>
 
-<!--transaction date range-->
+  <!--transaction date range-->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
     <div>
       <h3 class="text-2xl font-bold text-slate-800">Transaction History</h3>
@@ -93,16 +102,16 @@
              [(ngModel)]="endDate"
              class="text-sm px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer hover:bg-white transition-colors">
 
-      <button (click)="syncTransactions()"
+      <button (click)="loadLedger()"
               [disabled]="isLoading"
               class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 ml-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-        Sync
+        Load Transactions
       </button>
     </div>
   </div>
 
-<!--Income, expense, net total card-->
+  <!--Income, expense, net total card-->
   @if (transactions.length > 0 && !isLoading) {
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-fade-in-down">
 
@@ -144,11 +153,11 @@
   </div>
   }
 
-<!--Income/Expense and Balance Trend Graph-->
+  <!--Income/Expense and Balance Trend Graph-->
   @if (transactions.length > 1 && !isLoading) {
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in-up">
 
-<!--Income/Expense-->
+    <!--Income/Expense-->
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-80 hover:shadow-md transition-shadow">
       <h4 class="text-slate-500 font-semibold mb-2 text-center uppercase tracking-wider text-sm">Cash Flow Ratio</h4>
 
@@ -163,7 +172,7 @@
       </div>
     </div>
 
-<!--Balance trend-->
+    <!--Balance trend-->
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col h-80 hover:shadow-md transition-shadow">
       <h4 class="text-slate-500 font-semibold mb-2 uppercase tracking-wider text-sm">Balance Trend</h4>
       <div class="flex-grow relative w-full">
@@ -178,7 +187,7 @@
   </div>
   }
 
-<!--Loading-->
+  <!--Loading-->
   @if (isLoading && details) {
   <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100 mb-4">
     <div class="flex-1 space-y-4 py-1">
@@ -191,7 +200,7 @@
   </div>
   }
 
-<!--If no transaction-->
+  <!--If no transaction-->
   @if (transactions.length === 0 && !isLoading) {
   <div class="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
     <span class="text-4xl mb-3 block">🧾</span>
@@ -199,7 +208,7 @@
     <p class="text-slate-500 mt-1">Click sync above to fetch data from the bank.</p>
   </div>
   }
-<!--Transaction list-->
+  <!--Transaction list-->
   @else {
   <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
     @for (tx of transactions; track tx.transactionId) {
@@ -235,6 +244,73 @@
 
     </div>
     }
+  </div>
+  }
+
+  @if (isTransferModalOpen) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-fade-in p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+
+      <div class="bg-slate-50 border-b border-slate-100 px-6 py-5 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl shadow-inner">💸</div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg">Send Money</h3>
+            <p class="text-xs text-slate-500">Internal Network Transfer</p>
+          </div>
+        </div>
+        <button (click)="closeTransferModal()" class="text-slate-400 hover:text-slate-600 transition-colors text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-6 space-y-5">
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Amount to Send</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-bold">{{ details?.currencyCode }}</span>
+            <input type="number"
+                   [(ngModel)]="transferData.amount"
+                   class="w-full pl-12 pr-4 py-3 text-lg border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 bg-slate-50 font-bold"
+                   placeholder="0.00">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Recipient Account Number</label>
+          <input type="text"
+                 [(ngModel)]="transferData.receiverAccountNumber"
+                 class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 bg-slate-50 placeholder:font-normal font-mono text-sm"
+                 placeholder="Enter internal account number">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Description (Optional)</label>
+          <input type="text"
+                 [(ngModel)]="transferData.description"
+                 class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 bg-slate-50 placeholder:text-slate-400 text-sm"
+                 placeholder="e.g. Rent, Dinner, etc.">
+        </div>
+
+      </div>
+
+      <div class="bg-slate-50 border-t border-slate-100 px-6 py-5 flex justify-end gap-3">
+        <button (click)="closeTransferModal()"
+                class="px-5 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors">
+          Cancel
+        </button>
+        <button (click)="submitTransfer()"
+                [disabled]="isTransferring"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl shadow-md transition-colors flex items-center gap-2 disabled:opacity-50">
+          @if (isTransferring) {
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          Processing...
+          } @else {
+          Confirm Transfer
+          }
+        </button>
+      </div>
+
+    </div>
   </div>
   }
   }

@@ -74,11 +74,42 @@ namespace WebApplication1.Controllers
                 CurrencyCode = newAccount.CurrencyCode,
                 AccountStatus = newAccount.AccountStatus,
                 LastTransactionDate = newAccount.LastTransactionDate,
-                AccountType = newAccount.AccountType
+                AccountType = newAccount.AccountType,
+                ProviderName = newAccount.ProviderName
             };
 
             return CreatedAtAction(nameof(GetById), new { id = newAccount.Id }, responseDto);
 
+        }
+
+        [HttpPost("transfer")]
+        public async Task<IActionResult> TransferInternal([FromBody] TransferDTO transferDto)
+        {
+            // 1. Identify the user making the request from their secure JWT token
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+            int userId = int.Parse(userIdString);
+
+            try
+            {
+                // 2. Hand the data off to repository engine
+                var success = await _repo.TransferMoneyInternalAsync(userId, transferDto);
+
+                if (success)
+                {
+                    // 3. Return a clean 200 OK with a success message
+                    return Ok(new { message = "Transfer completed successfully." });
+                }
+
+                return BadRequest(new { message = "Transfer failed due to an unknown error." });
+            }
+            catch (Exception ex)
+            {
+                // 4. Catch the specific business logic errors (like "Insufficient funds") 
+                // that manually threw in the Repository, and send them to the frontend
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}update-account")]
@@ -111,6 +142,39 @@ namespace WebApplication1.Controllers
             }
             await _repo.DeleteAsync(Account);
             return NoContent();
+        }
+
+        [HttpGet("{accountNumber}/transactions")]
+        [Authorize]
+        public async Task<IActionResult> GetTransactions(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+            int userId = int.Parse(userIdString);
+
+            // 1. Find the specific account for this user
+            var accounts = await _repo.GetUserAccountsAsync(userId);
+            var account = accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+
+            if (account == null) return NotFound("Account not found.");
+
+            // 2. Fetch the transactions from the local database
+            var transactions = await _repo.GetAccountTransactionsAsync(account.Id, startDate, endDate);
+
+            var transactionDtos = transactions.Select(t => new TransactionDTO
+            {
+                TransactionId = t.TransactionId,
+                TransactionName = t.TransactionName,
+                Description = t.Description,
+                TransactionType = t.TransactionType,
+                Amount = t.Amount,
+                Balance = t.Balance,
+                TransactionDate = t.TransactionDate
+            });
+
+            // Return the clean DTOs
+            return Ok(transactionDtos);
         }
     }
 }

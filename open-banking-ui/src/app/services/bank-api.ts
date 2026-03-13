@@ -29,9 +29,18 @@ export class BankApiService {
     return this.http.post(`${this.baseUrl}/Vakifbank/account-transactions/${accountNumber}?startDate=${startDate}&endDate=${endDate}`, {});
   }
 
+  getTransactions(accountNumber: string, startDate: string, endDate: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/AccountList/${accountNumber}/transactions?startDate=${startDate}&endDate=${endDate}`);
+  }
+
   downloadReceipt(accountNumber: string, transactionId: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/Vakifbank/receipt/${accountNumber}/${transactionId}`, {
       responseType: 'blob'
     });
   }
+
+  transferInternal(payload: { SenderAccountNumber: string, ReceiverAccountNumber: string, Amount: number, Description: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/AccountList/transfer`, payload);
+  }
+  
 }
