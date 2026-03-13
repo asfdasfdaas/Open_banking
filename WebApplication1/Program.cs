@@ -90,10 +90,11 @@ app.UseCors(options =>
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<WebApplication1.Middleware.ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<WebApplication1.Middleware.ExceptionHandlingMiddleware>();
+
 
 app.MapControllers();
 

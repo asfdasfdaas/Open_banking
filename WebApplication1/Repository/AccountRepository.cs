@@ -56,10 +56,13 @@ namespace WebApplication1.Repository
         {
             return await _db.SaveChangesAsync() > 0;
         }
-        public async Task<List<string>> GetExistingTransactionIdsAsync(int accountId)
+        public async Task<List<string>> GetExistingTransactionIdsAsync(int accountId, DateTime startDate, DateTime endDate)
         {
             return await _db.AccountTransactions
-                            .Where(t => t.AccountListId == accountId)
+                            .Where(t => t.AccountListId == accountId
+                                && t.TransactionDate >= startDate
+                                && t.TransactionDate <= endDate
+                            )
                             .Select(t => t.TransactionId)
                             .ToListAsync();
         }

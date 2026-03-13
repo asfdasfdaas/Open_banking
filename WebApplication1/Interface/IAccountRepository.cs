@@ -12,7 +12,7 @@ namespace WebApplication1.Interfaces
         Task UpdateAsync(AccountList account);
         Task DeleteAsync(AccountList account);
         Task<bool> SaveAsync();
-        Task<List<string>> GetExistingTransactionIdsAsync(int accountId);
+        Task<List<string>> GetExistingTransactionIdsAsync(int accountId, DateTime startDate, DateTime endDate);
         Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions);
     }
 }

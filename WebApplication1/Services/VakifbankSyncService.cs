@@ -109,7 +109,7 @@ namespace WebApplication1.Services
 
             var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
             var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate, consentId);
-            var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id);
+            var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id, startDate, endDate);
 
             var newTransactions = new List<AccountTransaction>();
             foreach (var extTx in externalTransactions)
