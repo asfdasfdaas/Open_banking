@@ -5,6 +5,7 @@ namespace WebApplication1.Services
     public interface IBankIntegrationService
     {
         Task<string> GetBankTokenAsync(string consentId);
+        Task<string> GetClientCKeyAsync();
         Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId);
 
         Task<AccountDetailDTO> GetAccountDetailAsync(string accountNumber, string consentId);
@@ -12,5 +13,7 @@ namespace WebApplication1.Services
         Task<IEnumerable<TransactionDTO>> GetAccountTransactionsAsync(string accountNumber, DateTime startDate, DateTime endDate, string consentId);
 
         Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber, string consentId);
+
+        Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency);
     }
 }

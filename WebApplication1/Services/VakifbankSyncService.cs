@@ -60,6 +60,11 @@ namespace WebApplication1.Services
             return externalAccounts;
         }
 
+        public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
+        {
+            return await _vakifbankService.CalculateCurrencyAsync(sourceCurrency, amount, targetCurrency);
+        }
+
         public async Task<AccountDetailDTO> GetAndSyncAccountDetailAsync(int userId, string accountNumber)
         {
             var userAccounts = await _repo.GetUserAccountsAsync(userId);

@@ -34,6 +34,26 @@ namespace WebApplication1.Controllers
             return Ok(accounts);
         }
 
+        [AllowAnonymous]
+        [HttpPost("currency-calculator")]
+        public async Task<IActionResult> CalculateCurrency(
+            [FromQuery] string sourceCurrency,
+            [FromQuery] decimal amount,
+            [FromQuery] string targetCurrency)
+        {
+            try
+            {
+                var convertedAmount = await _syncService.CalculateCurrencyAsync(sourceCurrency, amount, targetCurrency);
+                return Ok(new { convertedAmount = convertedAmount });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
+
+        }
+
         [HttpGet("account-detail/{accountNumber}")]
         public async Task<IActionResult> GetAccountDetail([FromRoute] string accountNumber)
         {

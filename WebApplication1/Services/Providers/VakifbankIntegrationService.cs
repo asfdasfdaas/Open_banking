@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WebApplication1.Models.DTOs;
@@ -59,6 +60,88 @@ namespace WebApplication1.Services.Providers
             _cache.Set(cacheKey, newToken, cacheOptions);
 
             return newToken;
+        }
+
+        public async Task<String> GetClientCKeyAsync()
+        {
+            string cacheKey = "VakifbankCCToken";
+
+            if (_cache.TryGetValue(cacheKey, out string? cachedToken))
+            {
+                return cachedToken!; // Cache hit! Return it immediately.
+            }
+
+            var requestBody = new Dictionary<string, string>
+            {
+                { "client_id", _config["Vakifbank:SecondClientId"]! },
+                { "client_secret", _config["Vakifbank:SecondClientKey"]! },
+                { "grant_type", "client_credentials" },
+                { "scope", "oob" }
+            };
+
+            var content = new FormUrlEncodedContent(requestBody);
+
+            var response = await _httpClient.PostAsync("/oauth2/token", content);
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+
+            var tokenData = JsonSerializer.Deserialize<TokenResponse>(jsonString);
+
+            var newToken = tokenData!.AccessToken;
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(50)); // Safely caches for 50 mins
+
+            _cache.Set(cacheKey, newToken, cacheOptions);
+
+            return newToken;
+        }
+
+        public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
+        {
+            // 1. Get the token (from cache, or fetch a new one)
+            var token = await GetClientCKeyAsync();
+
+            // 2. Build the exact JSON payload the bank expects
+            var payload = new
+            {
+                SourceCurrencyCode = sourceCurrency,
+                SourceAmount = amount.ToString("0.##"), // Ensures it's formatted cleanly (e.g. "100" or "100.50")
+                TargetCurrencyCode = targetCurrency
+            };
+
+            var jsonContent = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+            // 3. Create the request and attach the Bearer token
+            var request = new HttpRequestMessage(HttpMethod.Post, "/currencyCalculator")
+            {
+                Content = jsonContent
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // 4. Send it!
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Currency API failed: {errorBody}");
+            }
+
+            // 5. Parse the result and return the final SaleAmount
+            var responseJson = await response.Content.ReadAsStringAsync();
+
+            // We use JsonSerializerOptions to ignore case, since C# properties are PascalCase but JSON might vary
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var resultData = JsonSerializer.Deserialize<CurrencyCalculatorResponse>(responseJson, options);
+
+            // Convert the string "2.24" into a C# decimal
+            if (decimal.TryParse(resultData.Data.Currency.SaleAmount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal finalAmount))
+            {
+                return finalAmount;
+            }
+
+            throw new Exception("Failed to parse the sale amount from the bank.");
         }
 
         public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId)
