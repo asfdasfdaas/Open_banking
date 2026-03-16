@@ -111,6 +111,12 @@ namespace WebApplication1.Repository
                 if (transferDto.Amount <= 0)
                     throw new Exception("Transfer amount must be greater than zero.");
 
+                if (senderAccount.Id == receiverAccount.Id)
+                    throw new Exception("You cannot transfer money to the same account.");
+
+                if (senderAccount.CurrencyCode != receiverAccount.CurrencyCode)
+                    throw new Exception($"Currency mismatch. Cannot transfer {senderAccount.CurrencyCode} to a {receiverAccount.CurrencyCode} account without FX conversion.");
+
                 // Check if they have enough money to send!
                 if (senderAccount.RemainingBalance < transferDto.Amount)
                     throw new Exception("Insufficient funds.");
