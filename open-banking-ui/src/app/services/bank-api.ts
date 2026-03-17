@@ -42,5 +42,11 @@ export class BankApiService {
   transferInternal(payload: { SenderAccountNumber: string, ReceiverAccountNumber: string, Amount: number, Description: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/AccountList/transfer`, payload);
   }
-  
+    
+  calculateCurrency(sourceCurrency: string, amount: number, targetCurrency: string): Observable<any> {
+    const url = `${this.baseUrl}/Vakifbank/currency-calculator?sourceCurrency=${sourceCurrency}&amount=${amount}&targetCurrency=${targetCurrency}`;
+
+    return this.http.post(url, {});
+  }
 }
+

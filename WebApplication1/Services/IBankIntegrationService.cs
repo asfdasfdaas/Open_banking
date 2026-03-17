@@ -1,4 +1,5 @@
 ﻿using WebApplication1.Models.DTOs;
+using WebApplication1.Models.External.Vakifbank;
 
 namespace WebApplication1.Services
 {
@@ -15,5 +16,6 @@ namespace WebApplication1.Services
         Task<byte[]> GetReceiptPdfAsync(string transactionId, string accountNumber, string consentId);
 
         Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency);
+        Task<DepositProductResponse> GetDepositProductsAsync();
     }
 }

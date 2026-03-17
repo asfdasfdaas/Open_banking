@@ -39,6 +39,44 @@
     </div>
   </div>
 
+  <div class="max-w-6xl mx-auto w-full mb-16 animate-fade-in-up" style="animation-delay: 0.2s;">
+    <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">Live Exchange Rates</h3>
+          <p class="text-sm text-slate-500">Real-time Vakifbank Market Data</p>
+        </div>
+      </div>
+
+      @if (isLoadingRates) {
+      <div class="flex justify-center items-center py-8">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      </div>
+      }
+      @else if (ratesError && popularRates.length === 0) {
+      <div class="text-center text-red-500 py-8 font-medium bg-red-50 rounded-2xl">
+        Currently unable to connect to the live market feed.
+      </div>
+      }
+      @else {
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        @for (rate of popularRates; track rate.code) {
+        <div class="bg-slate-50 border border-slate-100 px-6 py-5 rounded-2xl hover:bg-white hover:shadow-md transition-all duration-300 flex items-center gap-4 group cursor-default">
+          <div class="text-4xl group-hover:scale-110 transition-transform">{{ rate.icon }}</div>
+          <div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">1 {{ rate.code }} =</div>
+            <div class="text-2xl font-extrabold text-slate-800">{{ rate.rate | number:'1.2-2' }} ₺</div>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
 
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">

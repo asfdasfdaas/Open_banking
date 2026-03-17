@@ -2,6 +2,7 @@
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
+using WebApplication1.Models.External.Vakifbank;
 
 namespace WebApplication1.Services
 {
@@ -63,6 +64,10 @@ namespace WebApplication1.Services
         public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
         {
             return await _vakifbankService.CalculateCurrencyAsync(sourceCurrency, amount, targetCurrency);
+        }
+        public async Task<DepositProductResponse> GetDepositProductsAsync()
+        {
+            return await _vakifbankService.GetDepositProductsAsync();
         }
 
         public async Task<AccountDetailDTO> GetAndSyncAccountDetailAsync(int userId, string accountNumber)

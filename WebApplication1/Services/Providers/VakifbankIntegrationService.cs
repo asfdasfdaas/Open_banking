@@ -76,7 +76,7 @@ namespace WebApplication1.Services.Providers
                 { "client_id", _config["Vakifbank:SecondClientId"]! },
                 { "client_secret", _config["Vakifbank:SecondClientKey"]! },
                 { "grant_type", "client_credentials" },
-                { "scope", "oob" }
+                { "scope", "public oob" }
             };
 
             var content = new FormUrlEncodedContent(requestBody);
@@ -142,6 +142,36 @@ namespace WebApplication1.Services.Providers
             }
 
             throw new Exception("Failed to parse the sale amount from the bank.");
+        }
+
+        public async Task<DepositProductResponse> GetDepositProductsAsync()
+        {
+            // 1. Get the shared token
+            var token = await GetClientCKeyAsync();
+
+            // 2. Prepare an empty JSON body "{}" as required
+            var jsonContent = new StringContent("{}", Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "/depositProductList")
+            {
+                Content = jsonContent
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // 3. Send the request
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Deposit Product API failed: {errorBody}");
+            }
+
+            // 4. Parse and return the data
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var resultData = JsonSerializer.Deserialize<DepositProductResponse>(responseJson, options);
+            return resultData!;
         }
 
         public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId)

@@ -74,5 +74,22 @@ namespace WebApplication1.Controllers
             byte[] pdfBytes = await _syncService.GetReceiptPdfAsync(GetUserId(), accountNumber, transactionId);
             return File(pdfBytes, "application/pdf", $"Receipt_{transactionId}.pdf");
         }
+
+        [AllowAnonymous]
+        [HttpPost("deposit-products")]
+        public async Task<IActionResult> GetDepositProducts()
+        {
+            try
+            {
+                var products = await _syncService.GetDepositProductsAsync();
+
+                // We return just the list of products to make the Angular side cleaner
+                return Ok(products.Data.DepositProduct);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
