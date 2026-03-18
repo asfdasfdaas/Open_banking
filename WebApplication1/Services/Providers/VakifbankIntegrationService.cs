@@ -174,6 +174,121 @@ namespace WebApplication1.Services.Providers
             return resultData!;
         }
 
+        public async Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            // 1. Get the shared token
+            var token = await GetClientCKeyAsync();
+
+            // 2. Build the dynamic payload
+            var payload = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(cityCode))
+            {
+                payload.Add("CityCode", cityCode);
+            }
+            if (!string.IsNullOrWhiteSpace(districtCode))
+            {
+                payload.Add("BankDistrictCode", districtCode);
+            }
+
+            var jsonString = JsonSerializer.Serialize(payload);
+            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+
+            // 3. Create and send the request
+            var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankBranchList")
+            {
+                Content = jsonContent
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Branch List API failed: {errorBody}");
+            }
+
+            // 4. Parse the result
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var resultData = JsonSerializer.Deserialize<BranchListResponse>(responseJson, options);
+            return resultData!;
+        }
+
+        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest requestData)
+        {
+            // 1. Get the shared token
+            var token = await GetClientCKeyAsync();
+
+            // 2. Turn our C# request object into JSON
+            var jsonString = JsonSerializer.Serialize(requestData);
+            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+
+            // 3. Create and send the HTTP POST request
+            var request = new HttpRequestMessage(HttpMethod.Post, "/depositCalculator")
+            {
+                Content = jsonContent
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Deposit Calculator API failed: {errorBody}");
+            }
+
+            // 4. Parse the result into our Response DTO
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var resultData = JsonSerializer.Deserialize<DepositCalculatorResponse>(responseJson, options);
+            return resultData!;
+        }
+
+        public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            // 1. Get the shared token
+            var token = await GetClientCKeyAsync();
+
+            // 2. Build the dynamic payload
+            var payload = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(cityCode))
+            {
+                payload.Add("CityCode", cityCode);
+            }
+            if (!string.IsNullOrWhiteSpace(districtCode))
+            {
+                payload.Add("DistrictCode", districtCode); // Notice: ATMs use DistrictCode, not BankDistrictCode
+            }
+
+            var jsonString = JsonSerializer.Serialize(payload);
+            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+
+            // 3. Create and send the request
+            var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankATMList")
+            {
+                Content = jsonContent
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"ATM List API failed: {errorBody}");
+            }
+
+            // 4. Parse the result safely
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var resultData = JsonSerializer.Deserialize<ATMListResponse>(responseJson, options);
+            return resultData!;
+        }
+
         public async Task<IEnumerable<AccountListDTO>> GetAccountsFromBankAsync(int userId, string consentId)
         {
             var token = await GetBankTokenAsync(consentId);

@@ -69,6 +69,19 @@ namespace WebApplication1.Services
         {
             return await _vakifbankService.GetDepositProductsAsync();
         }
+        public async Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            return await _vakifbankService.GetBranchListAsync(cityCode, districtCode);
+        }
+
+        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request)
+        {
+            return await _vakifbankService.CalculateDepositAsync(request);
+        }
+        public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            return await _vakifbankService.GetATMListAsync(cityCode, districtCode);
+        }
 
         public async Task<AccountDetailDTO> GetAndSyncAccountDetailAsync(int userId, string accountNumber)
         {

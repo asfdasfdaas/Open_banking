@@ -17,5 +17,8 @@ namespace WebApplication1.Services
 
         Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency);
         Task<DepositProductResponse> GetDepositProductsAsync();
+        Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null);
+        Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request);
+        Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null);
     }
 }

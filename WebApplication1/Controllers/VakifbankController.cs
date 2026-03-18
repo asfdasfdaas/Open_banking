@@ -91,5 +91,58 @@ namespace WebApplication1.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("branches")]
+        public async Task<IActionResult> GetBranches([FromQuery] string? cityCode = null, [FromQuery] string? districtCode = null)
+        {
+            try
+            {
+                var branches = await _syncService.GetBranchListAsync(cityCode, districtCode);
+
+                // Return just the array of branches for cleaner frontend consumption
+                return Ok(branches.Data.Branch);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("deposit-calculator")]
+        public async Task<IActionResult> CalculateDeposit([FromBody] DepositCalculatorRequest request)
+        {
+            try
+            {
+                var result = await _syncService.CalculateDepositAsync(request);
+
+                // Return just the pure math details so Angular can read it easily
+                return Ok(result.Data.Deposit);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("atms")]
+        public async Task<IActionResult> GetATMs([FromQuery] string? cityCode = null, [FromQuery] string? districtCode = null)
+        {
+            try
+            {
+                var atms = await _syncService.GetATMListAsync(cityCode, districtCode);
+
+                // Return just the array of ATMs 
+                return Ok(atms.Data.ATM);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

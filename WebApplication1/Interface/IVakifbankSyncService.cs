@@ -11,5 +11,8 @@ namespace WebApplication1.Interface
         Task<IEnumerable<TransactionDTO>> SyncTransactionsAsync(int userId, string accountNumber, DateTime startDate, DateTime endDate);
         Task<byte[]> GetReceiptPdfAsync(int userId, string accountNumber, string transactionId);
         Task<DepositProductResponse> GetDepositProductsAsync();
+        Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null);
+        Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request);
+        Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null);
     }
 }
