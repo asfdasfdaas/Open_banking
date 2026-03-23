@@ -144,5 +144,71 @@ namespace WebApplication1.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+
+        [AllowAnonymous]
+        [HttpPost("cities")]
+        public async Task<IActionResult> GetCities()
+        {
+            try
+            {
+                var cities = await _syncService.GetCityListAsync();
+
+                // Return just the array of cities for cleaner frontend consumption
+                return Ok(cities.Data.City);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("districts")]
+        public async Task<IActionResult> GetDistricts([FromQuery] string cityCode)
+        {
+            // Add a quick safety check to ensure they actually provided a city code!
+            if (string.IsNullOrWhiteSpace(cityCode))
+            {
+                return BadRequest(new { message = "CityCode is required." });
+            }
+
+            try
+            {
+                var districts = await _syncService.GetDistrictListAsync(cityCode);
+
+                // Return just the array of districts for cleaner frontend consumption
+                return Ok(districts.Data.District);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("neighborhoods")]
+        public async Task<IActionResult> GetNeighborhoods([FromQuery] string districtCode)
+        {
+            // Safety check to ensure the district code is provided
+            if (string.IsNullOrWhiteSpace(districtCode))
+            {
+                return BadRequest(new { message = "DistrictCode is required." });
+            }
+
+            try
+            {
+                var neighborhoods = await _syncService.GetNeighborhoodListAsync(districtCode);
+
+                // Return just the array of neighborhoods
+                return Ok(neighborhoods.Data.Neighborhood);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

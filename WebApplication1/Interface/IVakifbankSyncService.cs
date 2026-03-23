@@ -14,5 +14,8 @@ namespace WebApplication1.Interface
         Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null);
         Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request);
         Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null);
+        Task<CityListResponse> GetCityListAsync();
+        Task<DistrictListResponse> GetDistrictListAsync(string cityCode);
+        Task<NeighborhoodListResponse> GetNeighborhoodListAsync(string districtCode);
     }
 }

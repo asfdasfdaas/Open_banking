@@ -61,28 +61,6 @@ namespace WebApplication1.Services
             return externalAccounts;
         }
 
-        public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
-        {
-            return await _vakifbankService.CalculateCurrencyAsync(sourceCurrency, amount, targetCurrency);
-        }
-        public async Task<DepositProductResponse> GetDepositProductsAsync()
-        {
-            return await _vakifbankService.GetDepositProductsAsync();
-        }
-        public async Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null)
-        {
-            return await _vakifbankService.GetBranchListAsync(cityCode, districtCode);
-        }
-
-        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request)
-        {
-            return await _vakifbankService.CalculateDepositAsync(request);
-        }
-        public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
-        {
-            return await _vakifbankService.GetATMListAsync(cityCode, districtCode);
-        }
-
         public async Task<AccountDetailDTO> GetAndSyncAccountDetailAsync(int userId, string accountNumber)
         {
             var userAccounts = await _repo.GetUserAccountsAsync(userId);
@@ -168,6 +146,40 @@ namespace WebApplication1.Services
             if (string.IsNullOrEmpty(consentId)) throw new Exception("You have not connected your Vakifbank account yet!");
 
             return await _vakifbankService.GetReceiptPdfAsync(transactionId, accountNumber, consentId);
+        }
+
+        public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
+        {
+            return await _vakifbankService.CalculateCurrencyAsync(sourceCurrency, amount, targetCurrency);
+        }
+        public async Task<DepositProductResponse> GetDepositProductsAsync()
+        {
+            return await _vakifbankService.GetDepositProductsAsync();
+        }
+        public async Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            return await _vakifbankService.GetBranchListAsync(cityCode, districtCode);
+        }
+
+        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request)
+        {
+            return await _vakifbankService.CalculateDepositAsync(request);
+        }
+        public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
+        {
+            return await _vakifbankService.GetATMListAsync(cityCode, districtCode);
+        }
+        public async Task<CityListResponse> GetCityListAsync()
+        {
+            return await _vakifbankService.GetCityListAsync();
+        }
+        public async Task<DistrictListResponse> GetDistrictListAsync(string cityCode)
+        {
+            return await _vakifbankService.GetDistrictListAsync(cityCode);
+        }
+        public async Task<NeighborhoodListResponse> GetNeighborhoodListAsync(string districtCode)
+        {
+            return await _vakifbankService.GetNeighborhoodListAsync(districtCode);
         }
     }
 }
