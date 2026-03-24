@@ -48,5 +48,20 @@ export class BankApiService {
 
     return this.http.post(url, {});
   }
+
+  getDepositProducts(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Vakifbank/deposit-products`,"{}");
+  }
+
+  calculateDeposit(depositType: string, campaignId: string, amount: number, days: number): Observable<any> {
+    const payload = {
+      Amount: amount,
+      CurrencyCode: "TL", // Hardcoded as you requested
+      DepositType: Number(depositType), // Ensuring they are numbers if the backend expects integers
+      CampaignId: Number(campaignId),
+      TermDays: days
+    };
+    return this.http.post(`${this.baseUrl}/Vakifbank/deposit-calculator`, payload);
+  }
 }
 

@@ -15,13 +15,18 @@ import { ToastService } from '../../services/toast';
   styleUrl: './dashboard.scss'
 })
 export class DashboardComponent implements OnInit {
-  // This array will hold the accounts from .NET
   accounts: any[] = [];
   isLoading: boolean = true;
   newConsentId: string = '';
   showConsentInput: boolean = false;
+  depositProducts: any[] = [];
+  selectedProduct: any = null;
+  depositAmount: number | null = null;
+  depositDays: number | null = null;
+  calculationResult: any = null;
+  isCalculating: boolean = false;
 
-  // Inject the service
+
   constructor(
     private bankApi: BankApiService,
     private authService: AuthService,
@@ -33,6 +38,7 @@ export class DashboardComponent implements OnInit {
   // This runs automatically when the page loads
   ngOnInit() {
     this.loadAccounts();
+    this.loadDepositProducts();
   }
 
   toggleConsentInput() {
@@ -112,6 +118,49 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error('Failed to connect bank', err);
         this.toastService.show('Filed to connect', 'error');
+      }
+    });
+  }
+
+  loadDepositProducts() {
+    this.bankApi.getDepositProducts().subscribe({
+      next: (response) => {
+        this.depositProducts = response.$values ? response.$values : response;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load deposit products', err);
+        this.toastService.show('Failed to load deposit products', 'error');
+      }
+    });
+  }
+
+  calculateDepositReturn() {
+    // Check if the object itself is selected
+    if (!this.selectedProduct || !this.depositAmount || !this.depositDays) {
+      this.toastService.show('Please fill in all fields to calculate', 'error');
+      return;
+    }
+
+    this.isCalculating = true;
+    this.calculationResult = null;
+
+    // Extract the exact IDs from the selected object
+    // Note: Double check if your API calls it 'productCode' or 'depositType' in the array
+    const depositType = this.selectedProduct.productCode;
+    const campaignId = this.selectedProduct.campaignId;
+
+    this.bankApi.calculateDeposit(depositType, campaignId, this.depositAmount, this.depositDays).subscribe({
+      next: (result) => {
+        this.calculationResult = result;
+        this.isCalculating = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Calculation failed', err);
+        this.toastService.show('Failed to calculate deposit. Check inputs.', 'error');
+        this.isCalculating = false;
+        this.cdr.detectChanges();
       }
     });
   }
