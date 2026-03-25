@@ -77,6 +77,91 @@
     </div>
   </div>
 
+  <div class="max-w-6xl mx-auto w-full mb-16 animate-fade-in-up" style="animation-delay: 0.3s;">
+    <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">Branch Locator</h3>
+          <p class="text-sm text-slate-500">Find a Vakifbank branch near you</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+        <div class="flex flex-col">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City</label>
+          <select [(ngModel)]="selectedCityCode"
+                  (change)="onCityChange()"
+                  [disabled]="isLoadingLocations"
+                  class="bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50">
+            <option value="">-- Select a City --</option>
+            @for (city of cities; track city.cityCode) {
+            <option [value]="city.cityCode">{{ city.cityName }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">District</label>
+          <select [(ngModel)]="selectedDistrictCode"
+                  (change)="onDistrictChange()"
+                  [disabled]="districts.length === 0 || isLoadingLocations"
+                  class="bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50">
+            <option value="">-- Select a District --</option>
+            @for (district of districts; track district.districtCode) {
+            <option [value]="district.bankDistrictCode">{{ district.districtName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (isLoadingBranches) {
+      <div class="flex justify-center items-center py-8 border-t border-slate-100">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+      }
+
+      @if (!isLoadingBranches && branches.length > 0) {
+      <div class="mt-4 pt-6 border-t border-slate-100">
+        <h4 class="text-sm font-bold text-slate-500 mb-4">{{ branches.length }} Branches Found</h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+          @for (branch of branches; track branch.branchCode) {
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:bg-white hover:border-blue-300 transition-all shadow-sm">
+            <div class="flex justify-between items-start mb-2">
+              <h5 class="font-bold text-slate-800 text-lg">{{ branch.branchName }}</h5>
+              <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-md">{{ branch.branchCode }}</span>
+            </div>
+            <p class="text-slate-600 text-sm mb-2 leading-relaxed flex items-start gap-2">
+              <span class="text-slate-400 mt-0.5">📍</span>
+              {{ branch.branchAddress }}
+            </p>
+            <div class="flex gap-2">
+              @if (branch.physicallyDisabledFriendly === 1) {
+              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium" title="Wheelchair Accessible">♿ Accessible</span>
+              }
+              @if (branch.safeDepositBoxStatus === 1) {
+              <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md font-medium">🔐 Safe Deposit Box</span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      @if (!isLoadingBranches && selectedDistrictCode && branches.length === 0) {
+      <div class="text-center py-8 border-t border-slate-100 text-slate-500">
+        No branches found in this district.
+      </div>
+      }
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
 
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">

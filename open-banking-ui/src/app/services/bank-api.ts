@@ -63,5 +63,17 @@ export class BankApiService {
     };
     return this.http.post(`${this.baseUrl}/Vakifbank/deposit-calculator`, payload);
   }
+
+  getCities(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Vakifbank/cities`, {});
+  }
+
+  getDistricts(cityCode: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Vakifbank/districts?cityCode=${cityCode}`, {});
+  }
+
+  getBranches(cityCode: string, districtCode: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Vakifbank/branches?cityCode=${cityCode}&districtCode=${districtCode}`, {});
+  }
 }
 

@@ -5,11 +5,12 @@ import { CommonModule } from '@angular/common';
 import { BankApiService } from '../../services/bank-api';
 import { forkJoin, of, interval, Subscription } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
@@ -20,6 +21,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   isLoadingRates: boolean = true;
   ratesError: boolean = false;
   private pollingSubscription?: Subscription;
+
+  cities: any[] = [];
+  districts: any[] = [];
+  branches: any[] = [];
+
+  selectedCityCode: string = '';
+  selectedDistrictCode: string = '';
+
+  isLoadingLocations: boolean = false;
+  isLoadingBranches: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -32,6 +43,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Check if they have a token the second the page loads
     this.isUserLoggedIn = this.authService.isLoggedIn();
     this.loadPopularCurrencies();
+
+    this.loadCities();
+
     this.pollingSubscription = interval(60000).subscribe(() => {
       console.log("Timer triggered: Refreshing live rates...");
       this.loadPopularCurrencies();
@@ -70,12 +84,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     const requests = currenciesToFetch.map(curr =>
       this.bankApi.calculateCurrency(curr.code, 1, 'TL').pipe(
         map(res => {
-          // 🚀 This logs EXACTLY what your .NET server is handing to Angular
           console.log(`Raw Network Response for ${curr.code}:`, res);
 
           return {
             code: curr.code,
-            // Safety net: If res is an object, use res.convertedAmount. If res is just a raw number, use res!
+            // Safety net: If res is an object, use res.convertedAmount. If res is just a raw number, use res
             rate: res.convertedAmount !== undefined ? res.convertedAmount : res,
             icon: curr.icon
           };
@@ -101,9 +114,63 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.ratesError = true;
       }
 
-      // Hide the spinner guaranteed!
       this.isLoadingRates = false;
       this.cdr.detectChanges();
     });
   }
+
+  loadCities() {
+    this.isLoadingLocations = true;
+    this.bankApi.getCities().subscribe({
+      next: (res) => {
+        this.cities = res;
+        this.isLoadingLocations = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Failed to load cities", err);
+        this.isLoadingLocations = false;
+      }
+    });
+  }
+  onCityChange() {
+    // Reset the downstream data
+    this.selectedDistrictCode = '';
+    this.districts = [];
+    this.branches = [];
+
+    if (!this.selectedCityCode) return;
+
+    this.isLoadingLocations = true;
+    this.bankApi.getDistricts(this.selectedCityCode).subscribe({
+      next: (res) => {
+        this.districts = res;
+        this.isLoadingLocations = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Failed to load districts", err);
+        this.isLoadingLocations = false;
+      }
+    });
+  }
+
+  onDistrictChange() {
+    this.branches = [];
+    if (!this.selectedDistrictCode) return;
+
+    this.isLoadingBranches = true;
+    this.bankApi.getBranches(this.selectedCityCode, this.selectedDistrictCode).subscribe({
+      next: (res) => {
+        this.branches = res;
+        this.isLoadingBranches = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Failed to load branches", err);
+        this.isLoadingBranches = false;
+      }
+    });
+  }
 }
+
