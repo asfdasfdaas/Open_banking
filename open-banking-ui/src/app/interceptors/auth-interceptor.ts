@@ -14,7 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     
     // Send the modified request to the .NET backend
     return next(clonedRequest); 
-  }
+  } 
 
   // 3. If there is no token (like when they are logging in), just send the normal request
   return next(req);
