@@ -54,6 +54,7 @@ namespace WebApplication1.Controllers
 
             return Ok(new { token = token, expires = DateTime.Now.AddDays(1) });
         }
+
         [Authorize]
         [HttpDelete("delete-user-account")]
         public async Task<IActionResult> DeleteUser()

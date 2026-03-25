@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,11 +14,13 @@ namespace WebApplication1.Repository
     {
         private readonly ApplicationDBContext _db;
         private readonly IConfiguration _config;
+        private readonly IMemoryCache _cache;
 
-        public AuthRepository(ApplicationDBContext db, IConfiguration config)
+        public AuthRepository(ApplicationDBContext db, IConfiguration config, IMemoryCache cache)
         {
             _db = db;
             _config = config;
+            _cache = cache;
         }
         private string CreateToken(User user)
         {
@@ -66,6 +69,12 @@ namespace WebApplication1.Repository
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 return null; // Bad username or password
+            }
+
+            if (!string.IsNullOrEmpty(user.VakifbankConsentId))
+            {
+                string cacheKey = $"VakifbankToken_{user.VakifbankConsentId}";
+                _cache.Remove(cacheKey);
             }
 
             // 3. Generate a JWT Token

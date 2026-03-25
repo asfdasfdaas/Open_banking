@@ -198,10 +198,10 @@ namespace WebApplication1.Services.Providers
 
             if (!response.IsSuccessStatusCode)
             {
-                // 2. Read the actual error message the bank sent back
+                //  Read the actual error message the bank sent back
                 var errorBody = await response.Content.ReadAsStringAsync();
 
-                // 3. Throw a custom exception that includes the bank's detailed complaint!
+                //  Throw a custom exception that includes the bank's detailed complaint!
                 throw new Exception($"Bank API rejected the request. Status: {response.StatusCode}. Bank Details: {errorBody}");
             }
 
