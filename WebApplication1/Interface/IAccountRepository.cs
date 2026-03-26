@@ -16,6 +16,7 @@ namespace WebApplication1.Interfaces
         Task<List<string>> GetExistingTransactionIdsAsync(int accountId, DateTime startDate, DateTime endDate);
         Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions);
         Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto);
+        Task<AccountList?> GetByAccountNumberAsync(string accountNumber);
     }
 }
 

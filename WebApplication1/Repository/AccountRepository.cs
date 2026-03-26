@@ -181,5 +181,10 @@ namespace WebApplication1.Repository
                 throw; // Re-throw the error so Controller can read the message (e.g., "Insufficient funds")
             }
         }
+        public async Task<AccountList?> GetByAccountNumberAsync(string accountNumber)
+        {
+            // Searches the database for the matching string account number
+            return await _db.AccountLists.FirstOrDefaultAsync(x => x.AccountNumber == accountNumber);
+        }
     }
 }

@@ -187,6 +187,36 @@
   </div>
   }
 
+  <div class="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl text-white">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-xl">✨</div>
+        <div>
+          <h3 class="font-bold text-lg">AI Spending Analysis</h3>
+          <p class="text-slate-400 text-sm">Get instant insights on the transactions listed below</p>
+        </div>
+      </div>
+
+      <button (click)="analyzeSpending()"
+              [disabled]="isAnalyzing || transactions.length === 0"
+              class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2">
+        @if (isAnalyzing) {
+        <div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+        Analyzing...
+        } @else {
+        Generate Insights
+        }
+      </button>
+    </div>
+
+    @if (aiInsights) {
+    <div class="bg-slate-800/80 rounded-2xl p-5 border border-slate-700 animate-fade-in text-slate-200 leading-relaxed whitespace-pre-line">
+      {{ aiInsights }}
+    </div>
+    }
+  </div>
+
   <!--Loading-->
   @if (isLoading && details) {
   <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100 mb-4">

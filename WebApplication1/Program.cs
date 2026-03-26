@@ -23,7 +23,9 @@ builder.Services.AddHttpClient<IBankIntegrationService, VakifbankIntegrationServ
     client.BaseAddress = new Uri(builder.Configuration["Vakifbank:BaseUrl"]!);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+builder.Services.AddHttpClient<IGeminiIntegrationService, GeminiIntegrationService>();
 
+builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

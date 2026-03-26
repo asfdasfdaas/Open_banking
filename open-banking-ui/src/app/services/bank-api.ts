@@ -75,5 +75,12 @@ export class BankApiService {
   getBranches(cityCode: string, districtCode: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/Vakifbank/branches?cityCode=${cityCode}&districtCode=${districtCode}`, {});
   }
-}
 
+  sendChatMessage(prompt: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Ai/chat`, { Prompt: prompt });
+  }
+
+  getAccountInsights(accountNumber: string, startDate: string, endDate: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Ai/analyze-spending/${accountNumber}?startDate=${startDate}&endDate=${endDate}`, {});
+  }
+}

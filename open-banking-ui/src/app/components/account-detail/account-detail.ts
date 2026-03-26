@@ -27,6 +27,8 @@ export class AccountDetailComponent implements OnInit {
   netTotal: number = 0;
   isTransferModalOpen: boolean = false;
   isTransferring: boolean = false;
+  aiInsights: string = '';
+  isAnalyzing: boolean = false;
   transferData = {
     receiverAccountNumber: '',
     amount: 0,
@@ -244,5 +246,26 @@ export class AccountDetailComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/dashboard']);
+  }
+
+  analyzeSpending() {
+    if (!this.accountNumber || !this.startDate || !this.endDate) return;
+
+    this.isAnalyzing = true;
+    this.aiInsights = ''; // Clear previous insights
+
+    this.bankApi.getAccountInsights(this.accountNumber, this.startDate, this.endDate).subscribe({
+      next: (res) => {
+        this.aiInsights = res.advice;
+        this.isAnalyzing = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("AI Analysis failed", err);
+        this.aiInsights = "Unable to generate insights at this time. Please try again later.";
+        this.isAnalyzing = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }
