@@ -390,23 +390,23 @@ namespace WebApplication1.Services.Providers
             return resultData!;
         }
 
-        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest requestData)
+        public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request)
         {
             // 1. Get the shared token
             var token = await GetClientCKeyAsync();
 
             // 2. Turn our C# request object into JSON
-            var jsonString = JsonSerializer.Serialize(requestData);
+            var jsonString = JsonSerializer.Serialize(request);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
             // 3. Create and send the HTTP POST request
-            var request = new HttpRequestMessage(HttpMethod.Post, "/depositCalculator")
+            var newRequest = new HttpRequestMessage(HttpMethod.Post, "/depositCalculator")
             {
                 Content = jsonContent
             };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            newRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(newRequest);
             if (!response.IsSuccessStatusCode)
             {
                 var errorBody = await response.Content.ReadAsStringAsync();
