@@ -5,11 +5,11 @@ namespace WebApplication1.Models.External.Vakifbank
     // 1. The Request Object (What we send to the bank)
     public class DepositCalculatorRequest
     {
-        public decimal Amount { get; set; }
+        public decimal Amount { get; set; } = 1;
         public string CurrencyCode { get; set; } = string.Empty;
-        public long DepositType { get; set; } // e.g. 55500003
-        public long CampaignId { get; set; }  // e.g. 6000002324
-        public int TermDays { get; set; }
+        public long ?DepositType { get; set; } // e.g. 55500003
+        public long ?CampaignId { get; set; }  // e.g. 6000002324
+        public int ?TermDays { get; set; }
     }
 
     // 2. The Response Objects (What the bank sends back)
