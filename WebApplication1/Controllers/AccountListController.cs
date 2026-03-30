@@ -12,6 +12,7 @@ using WebApplication1.Interfaces;
 using WebApplication1.Mapper;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
+
 namespace WebApplication1.Controllers
 {
     [Authorize]
@@ -19,14 +20,14 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class AccountListController : ControllerBase
     {
-        private readonly IAccountRepository _repo; // Changed from DBContext
+        private readonly IAccountRepository _repo;
 
         public AccountListController(IAccountRepository repo)
         {
             _repo = repo;
         }
 
-        [HttpGet("get-accounts-list")] //api/AccountList
+        [HttpGet("get-accounts-list")] 
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -41,7 +42,7 @@ namespace WebApplication1.Controllers
 
         }
 
-        [HttpGet("{id}get-account")] //api/AccountList/{id}
+        [HttpGet("{id}get-account")] 
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
@@ -106,7 +107,7 @@ namespace WebApplication1.Controllers
             }
             catch (Exception ex)
             {
-                // 4. Catch the specific business logic errors (like "Insufficient funds") 
+                // 4. Catch the specific business logic errors 
                 // that manually threw in the Repository, and send them to the frontend
                 return BadRequest(new { message = ex.Message });
             }

@@ -86,7 +86,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(options =>
-    options.WithOrigins("http://localhost:4200") // Or specify your frontend's exact URL
+    options.WithOrigins("http://localhost:4200")
            .AllowAnyMethod()
            .AllowCredentials()
            .AllowAnyHeader());
