@@ -104,7 +104,7 @@ namespace WebApplication1.Services.Providers
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var emptybody = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+            var emptybody = new StringContent("{}", Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync("/accountList", emptybody);
             response.EnsureSuccessStatusCode();

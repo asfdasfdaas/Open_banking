@@ -17,7 +17,7 @@ namespace WebApplication1.Models.External.Vakifbank
             // If the bank mistakenly sends a string (e.g., "1" or "")
             if (reader.TokenType == JsonTokenType.String)
             {
-                string val = reader.GetString();
+                string ?val = reader.GetString();
 
                 // Turn empty strings into null to prevent crashes
                 if (string.IsNullOrWhiteSpace(val))
