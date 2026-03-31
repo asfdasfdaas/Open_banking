@@ -21,10 +21,6 @@ namespace WebApplication1.Models.DTOs
         public string CurrencyCode { get; set; } = string.Empty; //Döviz kodu
 
         [Required]
-        public string AccountStatus { get; set; } = string.Empty; //Hesap durumu, A: Açık, K: Kapalı
-        public DateTime ?LastTransactionDate { get; set; }//Son işlem tarihi
-
-        [Required]
         public int AccountType { get; set; } = 1; //Hesap tipi
     }
 }

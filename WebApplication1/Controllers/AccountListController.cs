@@ -66,18 +66,7 @@ namespace WebApplication1.Controllers
 
             await _repo.CreateAsync(newAccount);
 
-            var responseDto = new AccountListDTO
-            {
-                AccountNumber = newAccount.AccountNumber,
-                Balance = newAccount.Balance,
-                RemainingBalance = newAccount.RemainingBalance,
-                IBAN = newAccount.IBAN,
-                CurrencyCode = newAccount.CurrencyCode,
-                AccountStatus = newAccount.AccountStatus,
-                LastTransactionDate = newAccount.LastTransactionDate,
-                AccountType = newAccount.AccountType,
-                ProviderName = newAccount.ProviderName
-            };
+            var responseDto = newAccount.ToAccountDto();
 
             return CreatedAtAction(nameof(GetById), new { id = newAccount.Id }, responseDto);
 
@@ -146,7 +135,6 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("{accountNumber}/transactions")]
-        [Authorize]
         public async Task<IActionResult> GetTransactions(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

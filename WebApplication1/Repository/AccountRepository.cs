@@ -85,14 +85,12 @@ namespace WebApplication1.Repository
         public async Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto)
         {
             //1. BEGIN TRANSACTION
-            // This tells MS SQL: "Do not permanently save anything until I explicitly call Commit()."
             // If the app crashes at any point, the database will automatically roll back to its original state.
             await using var dbTransaction = await _db.Database.BeginTransactionAsync();
 
             try
             {
                 // 2. FETCH & VALIDATE SENDER (Security)
-                // We MUST include `a.UserId == userId` to guarantee the logged-in user actually owns the sender account.
                 var senderAccount = await _db.AccountLists
                     .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.SenderAccountNumber && a.UserId == userId);
 
@@ -100,7 +98,6 @@ namespace WebApplication1.Repository
                     throw new Exception("Invalid sender account. Ensure it is an internal account that belongs to you.");
 
                 // 3. FETCH & VALIDATE RECEIVER
-                // The receiver can belong to anyone in the database, so we drop the `UserId` check.
                 var receiverAccount = await _db.AccountLists
                     .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.ReceiverAccountNumber);
 
@@ -121,14 +118,14 @@ namespace WebApplication1.Repository
                 if (senderAccount.RemainingBalance < transferDto.Amount)
                     throw new Exception("Insufficient funds.");
 
-                // 5. DO THE MATH (Consistency)
+                // 5. DO THE MATH
                 senderAccount.Balance -= transferDto.Amount;
                 senderAccount.RemainingBalance -= transferDto.Amount;
 
                 receiverAccount.Balance += transferDto.Amount;
                 receiverAccount.RemainingBalance += transferDto.Amount;
 
-                // 6. CREATE THE AUDIT TRAIL (The Ledger)
+                // 6. CREATE THE AUDIT TRAIL
                 var timestamp = DateTime.UtcNow;
 
                 // The negative transaction for the sender
@@ -163,10 +160,7 @@ namespace WebApplication1.Repository
                 await _db.AccountTransactions.AddRangeAsync(senderTx, receiverTx);
 
                 // 7. SAVE & COMMIT (Durability)
-                // SaveAsync writes the balance updates and the new ledger rows to the database.
                 await SaveAsync();
-
-                // CommitAsync is the trigger. It permanently locks the data in MS SQL.
                 await dbTransaction.CommitAsync();
 
                 return true;
