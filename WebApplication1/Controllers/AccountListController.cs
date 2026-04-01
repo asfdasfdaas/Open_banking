@@ -45,7 +45,9 @@ namespace WebApplication1.Controllers
         [HttpGet("{id}get-account")] 
         public async Task<ActionResult<AccountListDTO>> GetById(int id)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
             var account = await _repo.GetByIdAsync(id,userId);
             if (account == null)
             {
@@ -59,7 +61,9 @@ namespace WebApplication1.Controllers
         [HttpPost("create-account")]
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
             var newAccount = createDTO.ToAccountFromCreateDTO();
 
             newAccount.UserId = userId;
@@ -76,10 +80,9 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> TransferInternal([FromBody] TransferDTO transferDto)
         {
             // 1. Identify the user making the request from their secure JWT token
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-            int userId = int.Parse(userIdString);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
 
             try
             {
@@ -105,7 +108,9 @@ namespace WebApplication1.Controllers
         [HttpPut("{id}update-account")]
         public async Task<IActionResult> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
             var Account = await _repo.GetByIdAsync(id,userId);
 
             if (Account == null)
@@ -123,7 +128,9 @@ namespace WebApplication1.Controllers
         [HttpDelete("{id}delete-account")]
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
             var Account = await _repo.GetByIdAsync(id,userId);
 
             if (Account == null)
@@ -137,10 +144,9 @@ namespace WebApplication1.Controllers
         [HttpGet("{accountNumber}/transactions")]
         public async Task<IActionResult> GetTransactions(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-            int userId = int.Parse(userIdString);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
 
             // 1. Find the specific account for this user
             var accounts = await _repo.GetUserAccountsAsync(userId);
