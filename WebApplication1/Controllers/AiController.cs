@@ -27,8 +27,7 @@ namespace WebApplication1.Controllers
             {
                 var responseText = await _aiAssistantService.ChatAsync(request.Prompt);
 
-                // Return as an object so Angular can parse res.reply easily
-                return Ok(new { reply = responseText });
+                return Ok(new { reply = responseText });// anonymous object 
             }
             catch (Exception ex)
             {

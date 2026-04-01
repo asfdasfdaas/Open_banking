@@ -89,7 +89,7 @@ export class AccountDetailComponent implements OnInit {
   copyToClipboard(text: string) {
     if (!text) return;
 
-    // Use the native browser clipboard API
+
     navigator.clipboard.writeText(text).then(() => {
       this.toastService.show('IBAN copied to clipboard!', 'success');
     }).catch(err => {

@@ -43,7 +43,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("{id}get-account")] 
-        public async Task<ActionResult<AccountListDTO>> GetById(int id)
+        public async Task<ActionResult<AccountListDTO>> GetById([FromRoute]int id)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();

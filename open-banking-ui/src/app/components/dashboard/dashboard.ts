@@ -74,7 +74,11 @@ export class DashboardComponent implements OnInit {
 
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Failed to load accounts', err)
+      error: (err) => {
+        console.error('Failed to load accounts', err);
+        this.toastService.show('Faild to load accounts. Please check if you are logged in', 'error')
+      }
+
     });
   }
 

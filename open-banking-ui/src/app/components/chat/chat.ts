@@ -18,7 +18,7 @@ export class ChatComponent implements AfterViewChecked {
   // Stores the conversation history for the UI
   messages: { sender: 'user' | 'ai', text: string }[] = [];
 
-  // Grabs the chat window element so we can auto-scroll to the bottom
+
   @ViewChild('chatScroll') private chatScrollContainer!: ElementRef;
 
   constructor(private bankApi: BankApiService, private cdr: ChangeDetectorRef) {
@@ -38,12 +38,12 @@ export class ChatComponent implements AfterViewChecked {
 
     const text = this.userInput;
 
-    // 1. Instantly show the user's message in the UI
+    // 1.show the user's message in the UI
     this.messages.push({ sender: 'user', text: text });
     this.userInput = '';
     this.isLoading = true;
 
-    // 2. Send it to your .NET backend
+    // 2. Send it to .NET backend
     this.bankApi.sendChatMessage(text).subscribe({
       next: (res) => {
         // 3. Catch the AI's reply and display it

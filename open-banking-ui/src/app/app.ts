@@ -20,7 +20,7 @@ export class App {
     private router: Router,
     private toastService: ToastService
   ) {
-    // Listen to the router. Every time the page changes, re-check the login status!
+    // Listen to the router. Every time the page changes, re-check the login status
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.isLoggedIn = this.authService.isLoggedIn();
@@ -28,7 +28,6 @@ export class App {
     });
   }
 
-  // Helper method for the HTML to use
   navigate(path: string) {
     this.router.navigate([path]);
   }
