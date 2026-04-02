@@ -68,6 +68,9 @@ export class ChatComponent implements AfterViewChecked {
   private scrollToBottom(): void {
     try {
       this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
-    } catch (err) { }
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    };
   }
-}
+ }
+

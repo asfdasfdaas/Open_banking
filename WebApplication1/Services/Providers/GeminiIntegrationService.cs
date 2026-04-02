@@ -20,10 +20,10 @@ namespace WebApplication1.Services.Providers
             var apiKey = _configuration["Gemini:ApiKey"];
             if (string.IsNullOrEmpty(apiKey)) throw new Exception("Gemini API Key is missing!");
 
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={apiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}"; //gemini-2.5-flash ya da gemini-3-flash-preview
 
             // Use the custom context if provided, otherwise default to the general chat persona
-            var defaultContext = "You are a professional, highly intelligent financial assistant for a modern open banking platform. Keep answers concise. This is development version";
+            var defaultContext = "You are a professional, highly intelligent financial assistant for a modern open banking platform. Keep answers concise.";
             var activeContext = customContext ?? defaultContext;
 
             var requestPayload = new GeminiRequest

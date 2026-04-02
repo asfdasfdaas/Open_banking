@@ -14,7 +14,7 @@ namespace WebApplication1.Controllers
             _aiAssistantService = aiAssistantService;
         }
 
-        // We create a tiny DTO just for the Angular request
+        // create a tiny DTO just for the Angular request
         public class ChatRequestDto { public string Prompt { get; set; } = string.Empty; }
 
         [HttpPost("chat")]

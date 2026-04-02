@@ -18,6 +18,7 @@ import { ToastService } from '../../services/toast';
 export class AccountDetailComponent implements OnInit {
   accountNumber: string = '';
   details: any = null;
+  providerName: string = 'vakifbank';
   transactions: any[] = [];
   isLoading: boolean = true;
   startDate: string = '';
@@ -99,9 +100,10 @@ export class AccountDetailComponent implements OnInit {
 
   loadDetails() {
     this.isLoading = true;
-    this.bankApi.getAccountDetail(this.accountNumber).subscribe({
+    this.bankApi.getAccountDetail(this.accountNumber, this.providerName).subscribe({
       next: (data) => {
         this.details = data;
+        this.providerName = (data?.providerName || data?.ProviderName || this.providerName);
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -176,7 +178,7 @@ export class AccountDetailComponent implements OnInit {
   }
 
   downloadReceipt(transactionId: string) {
-    this.bankApi.downloadReceipt(this.accountNumber, transactionId).subscribe({
+    this.bankApi.downloadReceipt(this.accountNumber, transactionId, this.providerName).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

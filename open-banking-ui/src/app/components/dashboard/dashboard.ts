@@ -89,7 +89,7 @@ export class DashboardComponent implements OnInit {
 
   syncVakifbank() {
     this.isLoading = true;
-    this.bankApi.syncVakifbankAccounts().subscribe({
+    this.bankApi.syncAccounts('vakifbank').subscribe({
       next: (response) => {
         this.loadAccounts();
       },
