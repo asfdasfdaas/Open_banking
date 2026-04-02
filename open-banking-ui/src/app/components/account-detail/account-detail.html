@@ -241,7 +241,7 @@
   <!--Transaction list-->
   @else {
   <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
-    @for (tx of transactions; track tx.transactionId) {
+    @for (tx of transactions; track $index) {
 
     <div class="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
 

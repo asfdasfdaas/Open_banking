@@ -104,6 +104,7 @@ export class AccountDetailComponent implements OnInit {
       next: (data) => {
         this.details = data;
         this.providerName = (data?.providerName || data?.ProviderName || this.providerName);
+        this.toastService.show('Account Details loaded successfuly', 'info');
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -127,9 +128,9 @@ export class AccountDetailComponent implements OnInit {
       next: (data) => {
         this.transactions = data.$values ? data.$values : data;
         this.calculateTotals();
-        this.toastService.show('Transactions successfully loaded', 'info');
         this.isLoading = false;
         this.cdr.detectChanges();
+
       },
       error: (err) => {
         console.error('Failed to load transactions', err);

@@ -23,7 +23,7 @@ namespace WebApplication1.Services
         {
             var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
             if (string.IsNullOrEmpty(consentId))
-                throw new Exception("You have not connected your Vakifbank account yet!"); // Middleware will catch this
+                throw new Exception("You have not connected your Vakifbank account yet!");
 
             var externalAccounts = await _vakifbankService.GetAccountsFromBankAsync(userId, consentId);
             var existingAccounts = await _repo.GetUserAccountsAsync(userId);

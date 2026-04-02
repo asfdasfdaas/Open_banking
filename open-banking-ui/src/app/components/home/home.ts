@@ -142,7 +142,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!this.selectedCityCode) return;
 
     this.isLoadingLocations = true;
-    this.bankApi.getDistricts(this.selectedCityCode).subscribe({
+    const formattedCode = String(this.selectedCityCode).padStart(2, '0');
+    this.bankApi.getDistricts(formattedCode).subscribe({
       next: (res) => {
         this.districts = res;
         this.isLoadingLocations = false;

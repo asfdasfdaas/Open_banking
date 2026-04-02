@@ -67,10 +67,15 @@ export class ChatComponent implements AfterViewChecked {
 
   private scrollToBottom(): void {
     try {
-      this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
+      // The '?' safely checks if the container exists before trying to read nativeElement!
+      if (this.chatScrollContainer?.nativeElement) {
+        this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
+      }
     } catch (err) {
-      console.error('Failed to copy text: ', err);
-    };
+      // (Also fixed the typo in your console log from top -> bottom!)
+      console.error('Failed to scroll to bottom', err);
+    }
   }
  }
+ 
 

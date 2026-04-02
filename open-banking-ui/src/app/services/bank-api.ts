@@ -7,10 +7,10 @@ import { Observable } from 'rxjs';
 })
 export class BankApiService {
   // Pointing to .NET port
-  private baseUrl = 'https://localhost:7277/api';
-  private defaultProvider = 'vakifbank';
+  private readonly baseUrl = 'https://localhost:7277/api';
+  private readonly defaultProvider = 'vakifbank';
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   private normalizeProvider(provider?: string): string {
     const p = (provider ?? this.defaultProvider).trim();
@@ -70,8 +70,8 @@ export class BankApiService {
   calculateDeposit(depositType: string, campaignId: string, amount: number, days: number): Observable<any> {
     const payload = {
       Amount: amount,
-      CurrencyCode: "TL", // Hardcoded as you requested
-      DepositType: Number(depositType), // Ensuring they are numbers if the backend expects integers
+      CurrencyCode: "TL",
+      DepositType: Number(depositType),
       CampaignId: Number(campaignId),
       TermDays: days
     };
