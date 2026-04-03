@@ -107,7 +107,7 @@ Controller: `AccountList` (all routes are under `/api/AccountList`).
 - `GET /api/AccountList/{accountNumber}/transactions?startDate=...&endDate=...`
   - Auth required
 
-### Vakifbank / Bank Integration
+### *Vakifbank / Bank Integration* This changed with banksController needs update
 
 Controller: `Vakifbank` (base route `/api/Vakifbank`).
 

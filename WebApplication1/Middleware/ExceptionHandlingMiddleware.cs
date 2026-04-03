@@ -23,7 +23,7 @@ namespace WebApplication1.Middleware
             }
             catch (Exception ex)
             {
-                // If ANYTHING fails, it falls back up to here!
+                // If anything fails, it falls back up to here
 
                 // 1. Log the error to console/terminal
                 _logger.LogError(ex, "An unhandled exception has occurred: {Message}", ex.Message);

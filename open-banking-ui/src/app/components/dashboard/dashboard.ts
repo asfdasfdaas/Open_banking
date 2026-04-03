@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit {
 
   // This runs automatically when the page loads
   ngOnInit() {
-    this.loadAccounts();
+    this.syncVakifbank();
     this.loadDepositProducts();
   }
 
@@ -95,7 +95,6 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Sync failed', err);
-        // If your .NET API returns a 400 because they haven't connected yet:
         if (err.status === 400) {
           this.toastService.show('Please connect your vakıfbank account first', 'error');
         }
@@ -117,7 +116,7 @@ export class DashboardComponent implements OnInit {
         this.toastService.show('Vakıfbank connected successfuly', 'success');
         this.newConsentId = ''; // Clear the text box
         this.showConsentInput = false;
-        this.syncVakifbank(); // Automatically trigger a sync now that we are connected!
+        this.syncVakifbank();
       },
       error: (err) => {
         console.error('Failed to connect bank', err);

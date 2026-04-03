@@ -7,7 +7,7 @@ namespace WebApplication1.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/banks")]
+    [Route("api/[controller]")]
     public class BanksController : ControllerBase
     {
         private readonly IVakifbankSyncService _vakifbankSyncService;

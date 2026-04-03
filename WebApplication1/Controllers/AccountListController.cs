@@ -21,7 +21,7 @@ namespace WebApplication1.Controllers
             _accountService = accountService;
         }
 
-        [HttpGet("get-accounts-list")] 
+        [HttpGet("get-accounts-list")]
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
