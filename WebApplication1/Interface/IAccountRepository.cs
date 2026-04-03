@@ -1,7 +1,7 @@
 ﻿using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 
-namespace WebApplication1.Interfaces
+namespace WebApplication1.Interface
 {
     public interface IAccountRepository
     {

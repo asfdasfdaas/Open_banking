@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using WebApplication1.Data;
-using WebApplication1.Interfaces;
+using WebApplication1.Interface;
 using WebApplication1.Mapper;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
