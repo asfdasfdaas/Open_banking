@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interface;
 using WebApplication1.Models;
@@ -10,42 +10,34 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthRepository _repo;
+        private readonly IAuthService _authService;
 
-        public AuthController(IAuthRepository repo)
+        public AuthController(IAuthService authService)
         {
-            _repo = repo;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
-            if (await _repo.UserExists(registerDTO.Username.ToLower()))
-            {
-                return BadRequest("Username already exists.");
-            }
-            if (await _repo.EmailExists(registerDTO.Email.ToLower()))
-            {
-                return BadRequest("Email already exists.");
-            }
-            var userToCreate = new User
-            {
-                UserName = registerDTO.Username.ToLower(),
-                Email = registerDTO.Email.ToLower()
+            var result = await _authService.RegisterAsync(registerDTO);
 
-            };
-            var createdUser = await _repo.Register(userToCreate, registerDTO.Password);
-            if (createdUser == null)
+            if (!result.Success)
             {
-                return StatusCode(500, "An error occurred while creating the user.");
+                if (result.Message.Contains("error occurred"))
+                {
+                    return StatusCode(500, result.Message);
+                }
+                return BadRequest(result.Message);
             }
-            return StatusCode(201, new { message = "User registered successfully." });
+
+            return StatusCode(201, new { message = result.Message });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
-            var token = await _repo.Login(loginDTO.Username.ToLower(), loginDTO.Password);
+            var token = await _authService.LoginAsync(loginDTO);
 
             if (token == null)
             {
@@ -64,13 +56,15 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Invalid user ID in token.");
             }
-            var deleted = await _repo.DeleteUser(userId);
+            
+            var deleted = await _authService.DeleteUserAsync(userId);
             if (!deleted)
             {
                 return NotFound("User not found or already deleted.");
             }
             return Ok(new { message = "User deleted successfully." });
         }
+        
         [Authorize]
         [HttpPost("save-vakifbank-consent")]
         public async Task<IActionResult> SaveVakifbankConsent([FromBody] string consentId)
@@ -78,7 +72,7 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId)) return Unauthorized();
 
-            var saved = await _repo.SaveVakifbankConsentAsync(userId, consentId);
+            var saved = await _authService.SaveVakifbankConsentAsync(userId, consentId);
             if (!saved) return NotFound("User not found.");
 
             return Ok(new { message = "Vakifbank connected successfully!" });

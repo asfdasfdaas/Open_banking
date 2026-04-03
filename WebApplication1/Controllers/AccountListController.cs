@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading.Tasks;
-using WebApplication1.Data;
 using WebApplication1.Interface;
-using WebApplication1.Mapper;
-using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Controllers
@@ -20,11 +14,11 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class AccountListController : ControllerBase
     {
-        private readonly IAccountRepository _repo;
+        private readonly IAccountService _accountService;
 
-        public AccountListController(IAccountRepository repo)
+        public AccountListController(IAccountService accountService)
         {
-            _repo = repo;
+            _accountService = accountService;
         }
 
         [HttpGet("get-accounts-list")] 
@@ -33,13 +27,10 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
-            var accounts = await _repo.GetUserAccountsAsync(userId);
-
-            var accountDtos = accounts.Select(s => s.ToAccountDto()).ToList();
+            
+            var accountDtos = await _accountService.GetAllAsync(userId);
 
             return Ok(accountDtos);
-
-
         }
 
         [HttpGet("{id}get-account")] 
@@ -48,12 +39,12 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
-            var account = await _repo.GetByIdAsync(id,userId);
-            if (account == null)
+            
+            var accountDto = await _accountService.GetByIdAsync(id, userId);
+            if (accountDto == null)
             {
                 return NotFound();
             }
-            var accountDto = account.ToAccountDto();
 
             return Ok(accountDto);
         }
@@ -64,16 +55,10 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
-            var newAccount = createDTO.ToAccountFromCreateDTO();
+            
+            var result = await _accountService.CreateAccountAsync(createDTO, userId);
 
-            newAccount.UserId = userId;
-
-            await _repo.CreateAsync(newAccount);
-
-            var responseDto = newAccount.ToAccountDto();
-
-            return CreatedAtAction(nameof(GetById), new { id = newAccount.Id }, responseDto);
-
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result.Dto);
         }
 
         [HttpPost("transfer")]
@@ -86,8 +71,8 @@ namespace WebApplication1.Controllers
 
             try
             {
-                // 2. Hand the data off to repository engine
-                var success = await _repo.TransferMoneyInternalAsync(userId, transferDto);
+                // 2. Hand the data off to service engine
+                var success = await _accountService.TransferInternalAsync(userId, transferDto);
 
                 if (success)
                 {
@@ -111,16 +96,13 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
-            var Account = await _repo.GetByIdAsync(id,userId);
+            
+            var updated = await _accountService.UpdateAccountAsync(id, userId, updateDTO);
 
-            if (Account == null)
+            if (!updated)
             {
                 return NotFound();
             }
-
-            Account.UpdateAccountFromDTO(updateDTO);
-
-            await _repo.UpdateAsync(Account);
 
             return NoContent();
         }
@@ -131,13 +113,14 @@ namespace WebApplication1.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
-            var Account = await _repo.GetByIdAsync(id,userId);
+            
+            var deleted = await _accountService.DeleteAccountAsync(id, userId);
 
-            if (Account == null)
+            if (!deleted)
             {
                 return NotFound();
             }
-            await _repo.DeleteAsync(Account);
+            
             return NoContent();
         }
 
@@ -148,25 +131,9 @@ namespace WebApplication1.Controllers
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
 
-            // 1. Find the specific account for this user
-            var accounts = await _repo.GetUserAccountsAsync(userId);
-            var account = accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+            var transactionDtos = await _accountService.GetTransactionsAsync(userId, accountNumber, startDate, endDate);
 
-            if (account == null) return NotFound("Account not found.");
-
-            // 2. Fetch the transactions from the local database
-            var transactions = await _repo.GetAccountTransactionsAsync(account.Id, startDate, endDate);
-
-            var transactionDtos = transactions.Select(t => new TransactionDTO
-            {
-                TransactionId = t.TransactionId,
-                TransactionName = t.TransactionName,
-                Description = t.Description,
-                TransactionType = t.TransactionType,
-                Amount = t.Amount,
-                Balance = t.Balance,
-                TransactionDate = t.TransactionDate
-            });
+            if (transactionDtos == null) return NotFound("Account not found.");
 
             // Return the clean DTOs
             return Ok(transactionDtos);
