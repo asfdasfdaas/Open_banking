@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Data;
 using WebApplication1.Interface;
-using WebApplication1.Interfaces;
 using WebApplication1.Repository;
 using WebApplication1.Services;
 using WebApplication1.Services.Providers;

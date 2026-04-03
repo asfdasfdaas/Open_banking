@@ -1,6 +1,6 @@
 using System.Linq;
 using WebApplication1.Services;
-using WebApplication1.Interfaces;
+using WebApplication1.Interface;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services.Providers
