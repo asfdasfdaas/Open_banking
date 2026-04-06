@@ -24,21 +24,21 @@ namespace WebApplication1.Repository
         }
         private string CreateToken(User user)
         {
-            // 1. Identify what information (Claims) we want to "bake" into the token
+            // Identify what information (Claims) we want to "bake" into the token
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName)
             };
 
-            // 2. Get the Secret Key from appsettings.json
+            // Get the Secret Key from appsettings.json
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _config.GetValue<string>("AppSettings:Token")!));
 
-            // 3. Create the Signing Credentials (The Digital Stamp)
+            // Create the Signing Credentials (The Digital Stamp)
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
-            // 4. Create the Token Descriptor (The "Specs" of the token)
+            // Create the Token Descriptor (The "Specs" of the token)
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
@@ -46,7 +46,7 @@ namespace WebApplication1.Repository
                 SigningCredentials = creds
             };
 
-            // 5. Generate and Return the string
+            // Generate and Return the string
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
@@ -54,10 +54,10 @@ namespace WebApplication1.Repository
         }
         public async Task<User?> Register(User user, string password)
         {
-            // 1. Scramble the password
+            // Scramble the password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            // 2. Save to SQL
+            // Save to SQL
             _db.User.Add(user);
             await _db.SaveChangesAsync();
             return user;
@@ -77,7 +77,7 @@ namespace WebApplication1.Repository
                 _cache.Remove(cacheKey);
             }
 
-            // 3. Generate a JWT Token
+            // Generate a JWT Token
             return CreateToken(user);
         }
         public async Task<bool> DeleteUser(int userId)

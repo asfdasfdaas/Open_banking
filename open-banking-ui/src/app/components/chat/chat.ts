@@ -38,15 +38,15 @@ export class ChatComponent implements AfterViewChecked {
 
     const text = this.userInput;
 
-    // 1.show the user's message in the UI
+    // show the user's message in the UI
     this.messages.push({ sender: 'user', text: text });
     this.userInput = '';
     this.isLoading = true;
 
-    // 2. Send it to .NET backend
+    // Send it to .NET backend
     this.bankApi.sendChatMessage(text).subscribe({
       next: (res) => {
-        // 3. Catch the AI's reply and display it
+        // Catch the AI's reply and display it
         this.messages.push({ sender: 'ai', text: res.reply });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -66,14 +66,8 @@ export class ChatComponent implements AfterViewChecked {
   }
 
   private scrollToBottom(): void {
-    try {
-      // The '?' safely checks if the container exists before trying to read nativeElement!
-      if (this.chatScrollContainer?.nativeElement) {
-        this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
-      }
-    } catch (err) {
-      // (Also fixed the typo in your console log from top -> bottom!)
-      console.error('Failed to scroll to bottom', err);
+    if (this.chatScrollContainer?.nativeElement) {
+      this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
     }
   }
  }
