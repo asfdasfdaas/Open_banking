@@ -1,16 +1,20 @@
 using WebApplication1.Interface;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
+using Microsoft.Extensions.Caching.Memory;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace WebApplication1.Services
 {
     public class AuthService : IAuthService
     {
         private readonly IAuthRepository _repo;
+        private readonly IMemoryCache _cache;
 
-        public AuthService(IAuthRepository repo)
+        public AuthService(IAuthRepository repo, IMemoryCache cache)
         {
             _repo = repo;
+            _cache = cache;
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(RegisterDTO registerDTO)
@@ -52,6 +56,22 @@ namespace WebApplication1.Services
         public async Task<bool> SaveVakifbankConsentAsync(int userId, string consentId)
         {
             return await _repo.SaveVakifbankConsentAsync(userId, consentId);
+        }
+
+        public Task LogoutAsync(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(token);
+            var expiresAt = jwtToken.ValidTo;
+            var timeRemaining = expiresAt - DateTime.UtcNow;
+
+            // Cache the token for its remaining lifespan
+            if (timeRemaining > TimeSpan.Zero)
+            {
+                _cache.Set(token, "Revoked", timeRemaining);
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

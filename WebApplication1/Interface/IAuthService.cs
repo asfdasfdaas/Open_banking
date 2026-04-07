@@ -8,5 +8,6 @@ namespace WebApplication1.Interface
         Task<string?> LoginAsync(LoginDTO loginDTO);
         Task<bool> DeleteUserAsync(int userId);
         Task<bool> SaveVakifbankConsentAsync(int userId, string consentId);
+        Task LogoutAsync(string token);
     }
 }

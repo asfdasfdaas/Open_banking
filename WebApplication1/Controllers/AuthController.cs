@@ -48,6 +48,25 @@ namespace WebApplication1.Controllers
         }
 
         [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+                var authHeader = HttpContext.Request.Headers.Authorization.ToString();
+                if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                {
+                    return BadRequest(new { message = "Invalid token." });
+                }
+
+                // Extract the HTTP-specific info
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                // Hand off to the Service layer
+                await _authService.LogoutAsync(token);
+
+                return Ok(new { message = "Successfully logged out." });
+
+        }
+
+        [Authorize]
         [HttpDelete("delete-user-account")]
         public async Task<IActionResult> DeleteUser()
         {
