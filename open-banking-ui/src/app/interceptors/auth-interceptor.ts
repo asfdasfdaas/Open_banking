@@ -2,7 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // 1. Dig into the browser's vault to see if we have a token saved
-  const token = localStorage.getItem('jwt_token');
+  const token = sessionStorage.getItem('jwt_token');
 
   // 2. If a token exists, clone the request and attach the "Bearer" header
   if (token) {

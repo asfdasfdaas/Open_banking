@@ -44,7 +44,7 @@ namespace WebApplication1.Controllers
                 return Unauthorized("Invalid username or password.");
             }
 
-            return Ok(new { token = token, expires = DateTime.Now.AddMinutes(10) });
+            return Ok(new { token = token, expires = DateTime.Now.AddMinutes(15) });
         }
 
         [Authorize]

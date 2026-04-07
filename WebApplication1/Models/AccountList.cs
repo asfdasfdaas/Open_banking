@@ -27,7 +27,6 @@ namespace WebApplication1.Models
 
 
 
-        //AccountDetail
         public DateTime? OpeningDate { get; set; }
         public string? CustomerNumber { get; set; }
         public string? BranchCode { get; set; }

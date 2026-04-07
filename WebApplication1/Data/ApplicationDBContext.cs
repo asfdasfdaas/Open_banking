@@ -19,7 +19,7 @@ namespace WebApplication1.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Index the AccountNumber
+            // Indexing
             modelBuilder.Entity<AccountList>()
                 .HasIndex(a => a.AccountNumber)
                 .IsUnique();

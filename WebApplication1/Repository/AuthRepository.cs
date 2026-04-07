@@ -24,7 +24,7 @@ namespace WebApplication1.Repository
         }
         private string CreateToken(User user)
         {
-            // Identify what information (Claims) we want to "bake" into the token
+            // Identify what information (Claims) to "bake" into the token
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -42,7 +42,7 @@ namespace WebApplication1.Repository
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1), // Token lasts 24 hours
+                Expires = DateTime.Now.AddMinutes(15),
                 SigningCredentials = creds
             };
 

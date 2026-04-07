@@ -6,7 +6,7 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
-  // Pointing to your .NET AuthController
+  // Pointing to .NET AuthController
   private baseUrl = 'https://localhost:7277/api/Auth';
 
   constructor(private http: HttpClient) { }
@@ -19,15 +19,14 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}/login`, credentials).pipe(
       tap((response: any) => {
         if (response.token) {
-          localStorage.setItem('jwt_token', response.token);
+          sessionStorage.setItem('jwt_token', response.token);
         }
       })
     );
   }
 
-  // A helper function to grab the token later
   getToken(): string | null {
-    return localStorage.getItem('jwt_token');
+    return sessionStorage.getItem('jwt_token');
   }
 
   isLoggedIn(): boolean {
@@ -35,12 +34,12 @@ export class AuthService {
   }
 
   logout(): void {
+    sessionStorage.removeItem('jwt_token');
     localStorage.removeItem('jwt_token');
   }
 
   saveVakifbankConsent(consentId: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    // Note the `"${consentId}"` - .NET [FromBody] strings MUST be quoted!
     return this.http.post(`${this.baseUrl}/save-vakifbank-consent`, `"${consentId}"`, { headers });
   }
 }
