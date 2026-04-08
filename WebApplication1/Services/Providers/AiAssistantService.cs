@@ -43,7 +43,7 @@ namespace WebApplication1.Services.Providers
 
             var systemContext =
                 "You are an elite financial advisor. You will be provided with a user's transaction history. " +
-                "Analyze their spending habits, identify patterns, and provide 3 concise, highly actionable bullet points of financial advice. " +
+                "Analyze their spending habits, identify patterns, and provide concise, highly actionable bullet points of financial advice. " +
                 "Keep your tone professional, encouraging, and brief. Format your answer clearly.";
 
             var userPrompt = $"Here are the transactions:\n{txData}\n\nPlease provide your analysis.";

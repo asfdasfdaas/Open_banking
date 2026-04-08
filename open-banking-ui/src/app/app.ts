@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs'; // 🚀 Import Subscription
 export class App implements OnInit, OnDestroy {
   title = signal('open-banking-ui');
   isLoggedIn = false;
-  private authSub!: Subscription; // Keep track of the stream
+  private authSub!: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -24,14 +24,13 @@ export class App implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // 🚀 Listen to the live stream! No need to check router events.
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
     });
   }
 
   ngOnDestroy() {
-    // 🚀 Prevent memory leaks if this component is ever destroyed
+    // Prevent memory leaks if this component is ever destroyed
     if (this.authSub) {
       this.authSub.unsubscribe();
     }
@@ -42,13 +41,10 @@ export class App implements OnInit, OnDestroy {
   }
 
   logout() {
-    // 1. Tell the service to log out (this automatically updates the UI instantly)
     this.authService.logout();
 
-    // 2. Smoothly transition to the home page (No more window.location.reload!)
     this.router.navigate(['/']);
 
-    // 3. Show success toast
     this.toastService.show('Logged out', 'success');
   }
 }

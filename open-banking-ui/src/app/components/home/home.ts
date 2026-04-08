@@ -40,7 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // Check if they have a token the second the page loads
+    // Check if they have a token
     this.isUserLoggedIn = this.authService.isLoggedIn();
     this.loadPopularCurrencies();
 
@@ -80,7 +80,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       { code: 'XAG', icon: 'Gümüş' }
     ];
 
-    // 1. Prepare all our API requests
     const requests = currenciesToFetch.map(curr =>
       this.bankApi.calculateCurrency(curr.code, 1, 'TL').pipe(
         map(res => {
@@ -88,23 +87,23 @@ export class HomeComponent implements OnInit, OnDestroy {
 
           return {
             code: curr.code,
-            // Safety net: If res is an object, use res.convertedAmount. If res is just a raw number, use res
+            // If res is an object, use res.convertedAmount. If res is just a number, use res
             rate: res.convertedAmount !== undefined ? res.convertedAmount : res,
             icon: curr.icon
           };
         }),
         catchError(err => {
           console.error(`API Failed for ${curr.code}`, err);
-          return of(null); // If one fails, gracefully return null so the others don't crash!
+          return of(null);
         })
       )
     );
 
-    // 2. forkJoin executes all requests simultaneously and waits for ALL of them to finish
+    // forkJoin executes all requests simultaneously and waits for all of them to finish
     forkJoin(requests).subscribe(results => {
       console.log("All requests finished!", results);
 
-      // Filter out any currencies that failed (the ones that returned null)
+      // Filter out any currencies that failed
       this.popularRates = results.filter(r => r !== null) as any[];
 
       // Sort to ensure consistent visual order

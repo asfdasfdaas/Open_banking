@@ -48,7 +48,7 @@ export class AccountDetailComponent implements OnInit {
     datasets: [
       {
         data: [], // This will hold the balances
-        label: 'Daily Balance',
+        label: 'Balance',
         fill: true,
         tension: 0.1, // This makes the line curved instead of jagged
         borderColor: '#2563eb', // Blue-600

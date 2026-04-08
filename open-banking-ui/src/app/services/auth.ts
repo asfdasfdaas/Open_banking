@@ -9,10 +9,10 @@ export class AuthService {
   // Pointing to .NET AuthController
   private baseUrl = 'https://localhost:7277/api/Auth';
 
-  // 1. The BehaviorSubject holds the live state
+
   private loggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
 
-  // 2. Expose it as a stream for components to listen to
+
   public isLoggedIn$ = this.loggedInSubject.asObservable();
 
   constructor(private http: HttpClient) { }
@@ -30,7 +30,6 @@ export class AuthService {
       tap((response: any) => {
         if (response.token) {
           sessionStorage.setItem('jwt_token', response.token);
-          // 🚀 Broadcast to the app: We are logged in!
           this.loggedInSubject.next(true);
         }
       })
@@ -42,7 +41,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken(); // Keep this for any quick static checks
+    return !!this.getToken();
   }
 
   logout(): void {
@@ -58,10 +57,9 @@ export class AuthService {
     });
   }
 
-  // 🚀 Helper to ensure the token is wiped and the app is notified
   private clearSession() {
     sessionStorage.removeItem('jwt_token');
-    this.loggedInSubject.next(false); // Broadcast to the app: We are logged out!
+    this.loggedInSubject.next(false);
   }
 
   saveVakifbankConsent(consentId: string): Observable<any> {
