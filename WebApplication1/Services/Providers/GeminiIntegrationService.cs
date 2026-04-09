@@ -34,7 +34,7 @@ namespace WebApplication1.Services.Providers
                 "Dashboard has users accounts and deposit calculator. " +
                 "Each account has an account detail page that has info like the transaction past and useful graphs and features for chosen date range like: net flow number, flow ratio pie chart graph, balance trend graph. " +
                 "Account details page also has an ai advisor that looks at your transactions from the chosen date range and gives advice base on that. " +
-                "Keep answers concise.";
+                "Keep answers concise. Here is user text:";
             var activeContext = customContext ?? defaultContext;
 
             var requestPayload = new GeminiRequest
@@ -52,10 +52,10 @@ namespace WebApplication1.Services.Providers
                 }
             };
 
+            Console.WriteLine("Gemini Request Payload:"+ JsonSerializer.Serialize(requestPayload));
             var jsonString = JsonSerializer.Serialize(requestPayload);
             var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 4. Send it!
             var response = await _httpClient.PostAsync(url, content);
 
             if (!response.IsSuccessStatusCode)

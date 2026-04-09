@@ -16,7 +16,7 @@
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
 
-      @if (isUserLoggedIn) {
+      @if (isLoggedIn) {
       <!--Go to dashboard button-->
       <button (click)="navigate('/dashboard')"
               class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-1">

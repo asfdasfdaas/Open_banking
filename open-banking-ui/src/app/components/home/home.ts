@@ -15,12 +15,13 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './home.scss'
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  isUserLoggedIn: boolean = false;
 
   popularRates: { code: string, rate: number, icon: string }[] = [];
   isLoadingRates: boolean = true;
   ratesError: boolean = false;
+  isLoggedIn = false;
   private pollingSubscription?: Subscription;
+  private authSub!: Subscription;
 
   cities: any[] = [];
   districts: any[] = [];
@@ -41,7 +42,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Check if they have a token
-    this.isUserLoggedIn = this.authService.isLoggedIn();
     this.loadPopularCurrencies();
 
     this.loadCities();
@@ -50,11 +50,16 @@ export class HomeComponent implements OnInit, OnDestroy {
       console.log("Timer triggered: Refreshing live rates...");
       this.loadPopularCurrencies();
     });
+    this.authSub = this.authService.isLoggedIn$.subscribe(status => {
+      this.isLoggedIn = status;
+    });
   }
   ngOnDestroy() {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
-      console.log("Home page destroyed: Polling timer successfully killed.");
+    }
+    if (this.authSub) {
+      this.authSub.unsubscribe();
     }
   }
 
@@ -64,8 +69,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   quit() {
     this.authService.logout();
-    this.isUserLoggedIn = false;
-    window.location.reload();
   }
   loadPopularCurrencies() {
     console.log("Starting to fetch currencies...");

@@ -45,21 +45,17 @@ export class AuthService {
   }
 
   logout(): void {
+    this.loggedInSubject.next(false);
     this.http.post(`${this.baseUrl}/logout`, {}).subscribe({
       next: () => {
         console.log("Token securely invalidated on the server.");
-        this.clearSession();
+        sessionStorage.removeItem('jwt_token');
       },
       error: (err) => {
         console.error("Logout failed on server, but clearing local cache anyway.", err);
-        this.clearSession();
+        sessionStorage.removeItem('jwt_token');
       }
     });
-  }
-
-  private clearSession() {
-    sessionStorage.removeItem('jwt_token');
-    this.loggedInSubject.next(false);
   }
 
   saveVakifbankConsent(consentId: string): Observable<any> {

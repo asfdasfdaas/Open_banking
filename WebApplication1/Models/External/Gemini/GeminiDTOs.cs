@@ -5,7 +5,6 @@ namespace WebApplication1.Models.External.Gemini
     // --- REQUEST OBJECTS  ---
     public class GeminiRequest
     {
-        // Add the new System Instruction property (make it nullable just in case)
         [JsonPropertyName("systemInstruction")]
         public GeminiContent? SystemInstruction { get; set; }
 

@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit {
 
   // This runs automatically when the page loads
   ngOnInit() {
-    this.syncVakifbank();
+    this.loadAccounts();
     this.loadDepositProducts();
   }
 
@@ -51,10 +51,7 @@ export class DashboardComponent implements OnInit {
 
   copyToClipboard(text: string) {
     if (!text) return;
-
-    // Use the native browser clipboard API
     navigator.clipboard.writeText(text).then(() => {
-      // For now, a simple alert. Later, you could trigger a beautiful Toast!
       this.toastService.show('IBAN copied to clipboard!', 'success');
     }).catch(err => {
       console.error('Failed to copy text: ', err);
@@ -69,7 +66,6 @@ export class DashboardComponent implements OnInit {
         this.accounts = data.$values ? data.$values : data;
 
         this.isLoading = false;
-
         console.log('Accounts loaded:', data);
 
         this.cdr.detectChanges();
@@ -148,8 +144,7 @@ export class DashboardComponent implements OnInit {
     this.isCalculating = true;
     this.calculationResult = null;
 
-    // Extract the exact IDs from the selected object
-    // Note: Double check if your API calls it 'productCode' or 'depositType' in the array
+    // Extract the IDs from the selected object
     const depositType = this.selectedProduct.productCode;
     const campaignId = this.selectedProduct.campaignId;
 
