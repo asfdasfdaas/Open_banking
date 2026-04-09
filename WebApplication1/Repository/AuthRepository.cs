@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using WebApplication1.Data;
 using WebApplication1.Interface;
 using WebApplication1.Models;
@@ -13,44 +8,10 @@ namespace WebApplication1.Repository
     public class AuthRepository : IAuthRepository
     {
         private readonly ApplicationDBContext _db;
-        private readonly IConfiguration _config;
-        private readonly IMemoryCache _cache;
 
-        public AuthRepository(ApplicationDBContext db, IConfiguration config, IMemoryCache cache)
+        public AuthRepository(ApplicationDBContext db)
         {
             _db = db;
-            _config = config;
-            _cache = cache;
-        }
-        private string CreateToken(User user)
-        {
-            // Identify what information (Claims) to "bake" into the token
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName)
-            };
-
-            // Get the Secret Key from appsettings.json
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _config.GetValue<string>("AppSettings:Token")!));
-
-            // Create the Signing Credentials (The Digital Stamp)
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            // Create the Token Descriptor (The "Specs" of the token)
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddMinutes(15),
-                SigningCredentials = creds
-            };
-
-            // Generate and Return the string
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
         }
         public async Task<User?> Register(User user, string password)
         {
@@ -62,23 +23,9 @@ namespace WebApplication1.Repository
             await _db.SaveChangesAsync();
             return user;
         }
-        public async Task<string?> Login(string username, string password)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
-            var user = await _db.User.FirstOrDefaultAsync(x => x.UserName == username);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            {
-                return null; // Bad username or password
-            }
-
-            if (!string.IsNullOrEmpty(user.VakifbankConsentId))
-            {
-                string cacheKey = $"VakifbankToken_{user.VakifbankConsentId}";
-                _cache.Remove(cacheKey);
-            }
-
-            // Generate a JWT Token
-            return CreateToken(user);
+            return await _db.User.FirstOrDefaultAsync(x => x.UserName == username);
         }
         public async Task<bool> DeleteUser(int userId)
         {

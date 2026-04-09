@@ -2,7 +2,10 @@ using WebApplication1.Interface;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace WebApplication1.Services
 {
@@ -10,11 +13,13 @@ namespace WebApplication1.Services
     {
         private readonly IAuthRepository _repo;
         private readonly IMemoryCache _cache;
+        private readonly IConfiguration _config;
 
-        public AuthService(IAuthRepository repo, IMemoryCache cache)
+        public AuthService(IAuthRepository repo, IMemoryCache cache, IConfiguration config)
         {
             _repo = repo;
             _cache = cache;
+            _config = config;
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(RegisterDTO registerDTO)
@@ -45,7 +50,13 @@ namespace WebApplication1.Services
 
         public async Task<string?> LoginAsync(LoginDTO loginDTO)
         {
-            return await _repo.Login(loginDTO.Username.ToLower(), loginDTO.Password);
+            var user = await _repo.GetByUsernameAsync(loginDTO.Username.ToLower());
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.PasswordHash))
+            {
+                return null;
+            }
+
+            return CreateToken(user);
         }
 
         public async Task<bool> DeleteUserAsync(int userId)
@@ -58,7 +69,7 @@ namespace WebApplication1.Services
             return await _repo.SaveVakifbankConsentAsync(userId, consentId);
         }
 
-        public Task LogoutAsync(string token)
+        public async Task LogoutAsync(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var jwtToken = tokenHandler.ReadJwtToken(token);
@@ -71,7 +82,41 @@ namespace WebApplication1.Services
                 _cache.Set(token, "Revoked", timeRemaining);
             }
 
-            return Task.CompletedTask;
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var userId))
+            {
+                var consentId = await _repo.GetVakifbankConsentIdAsync(userId);
+                if (!string.IsNullOrWhiteSpace(consentId))
+                {
+                    var cacheKey = $"VakifbankToken_{consentId}";
+                    _cache.Remove(cacheKey);
+                }
+            }
+        }
+
+        private string CreateToken(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
+                _config.GetValue<string>("AppSettings:Token")!));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddMinutes(15),
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

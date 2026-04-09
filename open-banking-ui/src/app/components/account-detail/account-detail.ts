@@ -67,22 +67,22 @@ export class AccountDetailComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // 1. Calculate the dates
+    // Calculate the dates
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - 30);
 
-    // 2. Format them as YYYY-MM-DD so the HTML Date Picker can read them!
+    // Format them as YYYY-MM-DD so the HTML Date Picker can read them
     this.endDate = end.toISOString().split('T')[0];
     this.startDate = start.toISOString().split('T')[0];
 
-    // 3. Grab the account number
+    // Grab the account number
     this.accountNumber = this.route.snapshot.paramMap.get('accountNumber') || '';
 
     if (this.accountNumber) {
       this.loadDetails();
 
-      // 4. Auto-sync transactions immediately on page load
+      // Auto-sync transactions on page load
       this.loadLedger();
     }
   }
