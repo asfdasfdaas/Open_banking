@@ -30,7 +30,7 @@ namespace WebApplication1.Services.Providers
 
             if (_cache.TryGetValue(cacheKey, out string? cachedToken))
             {
-                return cachedToken!; // Cache hit! Return it immediately.
+                return cachedToken!;
             }
 
             var requestBody = new Dictionary<string, string>
@@ -45,8 +45,8 @@ namespace WebApplication1.Services.Providers
 
             var content = new FormUrlEncodedContent(requestBody);
 
-            var response = await _httpClient.PostAsync("/oauth2/token", content); // Replace with actual token URL path
-            response.EnsureSuccessStatusCode(); // Crashes if you get a 400 or 401
+            var response = await _httpClient.PostAsync("/oauth2/token", content);
+            response.EnsureSuccessStatusCode(); // Crashes in a 400 or 401
 
             var jsonString = await response.Content.ReadAsStringAsync();
 

@@ -129,7 +129,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load deposit products', err);
-        this.toastService.show('Failed to load deposit products', 'error');
+        //this.toastService.show('Failed to load deposit products', 'error');
       }
     });
   }

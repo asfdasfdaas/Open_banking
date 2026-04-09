@@ -75,30 +75,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
 
                 return Task.CompletedTask;
-
-                ////  Grab the cache from the services
-                //var cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
-
-                ////  Grab the raw bearer token from Authorization header
-                //var authHeader = context.HttpContext.Request.Headers.Authorization.ToString();
-                //string? rawToken = null;
-                //if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer "))
-                //{
-                //    rawToken = authHeader.Substring("Bearer ".Length).Trim();
-                //}
-
-                //if (string.IsNullOrWhiteSpace(rawToken) && context.SecurityToken is JwtSecurityToken jwtToken)
-                //{
-                //    rawToken = jwtToken.RawData;
-                //}
-
-                ////  Check if it exists in blacklist
-                //if (!string.IsNullOrWhiteSpace(rawToken) && cache.TryGetValue(rawToken, out _))
-                //{
-                //    // If it's in the cache, instantly reject the request
-                //    context.Fail("This token has been revoked due to logout.");
-                //}
-                //return Task.CompletedTask;
             }
         };
 
