@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Services;
 
@@ -35,6 +36,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("analyze-spending/{accountNumber}")]
         public async Task<IActionResult> AnalyzeSpending(string accountNumber, [FromQuery] string startDate, [FromQuery] string endDate)
         {

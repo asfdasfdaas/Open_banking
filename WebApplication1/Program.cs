@@ -49,6 +49,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Cookies.ContainsKey("jwt_token"))
+                {
+                    context.Token = context.Request.Cookies["jwt_token"];
+                }
+                return Task.CompletedTask;
+            },
             OnTokenValidated = context =>
             {
                 // Grab the cache

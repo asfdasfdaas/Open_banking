@@ -38,31 +38,44 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
             var token = await _authService.LoginAsync(loginDTO);
+            if (token == null) return Unauthorized(new { message = "Invalid credentials" });
 
-            if (token == null)
+            // Create the cookie options
+            var cookieOptions = new CookieOptions
             {
-                return Unauthorized("Invalid username or password.");
-            }
+                HttpOnly = true, // Hides it from Angular/JavaScript
+                Secure = true,   // Requires HTTPS
+                SameSite = SameSiteMode.None, //Angular is port 4200, .NET is 7277
+                Expires = DateTime.UtcNow.AddMinutes(15)
+            };
 
-            return Ok(new { token = token, expires = DateTime.Now.AddMinutes(15) });
+            // Attach the cookie to the HTTP Response
+            Response.Cookies.Append("jwt_token", token, cookieOptions);
+
+            return Ok(new { message = "Logged in successfully" });
         }
 
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-                var authHeader = HttpContext.Request.Headers.Authorization.ToString();
-                if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-                {
-                    return BadRequest(new { message = "Invalid token." });
-                }
+            if (!Request.Cookies.TryGetValue("jwt_token", out var token) || string.IsNullOrEmpty(token))
+            {
+                return BadRequest(new { message = "No active session found." });
+            }
 
-                // Extract the HTTP-specific info
-                var token = authHeader.Substring("Bearer ".Length).Trim();
-                // Hand off to the Service layer
-                await _authService.LogoutAsync(token);
+            // Hand off to the Service layer
+            await _authService.LogoutAsync(token);
 
-                return Ok(new { message = "Successfully logged out." });
+            Response.Cookies.Append("jwt_token", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(-1)
+            });
+
+            return Ok(new { message = "Successfully logged out." });
 
         }
 
@@ -95,6 +108,13 @@ namespace WebApplication1.Controllers
             if (!saved) return NotFound("User not found.");
 
             return Ok(new { message = "Vakifbank connected successfully!" });
+        }
+
+        [Authorize]
+        [HttpGet("check-session")]
+        public IActionResult CheckSession()
+        {
+            return Ok(new { isAuthenticated = true });
         }
     }
 }

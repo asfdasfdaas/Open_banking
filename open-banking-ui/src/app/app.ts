@@ -24,6 +24,8 @@ export class App implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    this.authService.checkSession().subscribe();
+
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
     });
