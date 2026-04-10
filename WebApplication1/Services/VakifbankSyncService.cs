@@ -110,12 +110,13 @@ namespace WebApplication1.Services
 
             var consentId = await _authRepo.GetVakifbankConsentIdAsync(userId);
             var externalTransactions = await _vakifbankService.GetAccountTransactionsAsync(accountNumber, startDate, endDate, consentId);
-            var existingTxIds = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id, startDate, endDate);
+            var existingTxIdList = await _repo.GetExistingTransactionIdsAsync(dbAccount.Id, startDate, endDate);
+            var existingTxIdSet = new HashSet<string>(existingTxIdList);
 
             var newTransactions = new List<AccountTransaction>();
             foreach (var extTx in externalTransactions)
             {
-                if (!existingTxIds.Contains(extTx.TransactionId))
+                if (!existingTxIdSet.Contains(extTx.TransactionId))
                 {
                     newTransactions.Add(new AccountTransaction
                     {
@@ -131,7 +132,7 @@ namespace WebApplication1.Services
                 }
             }
 
-            if (newTransactions.Count > 0)
+            if (newTransactions.Any())
             {
                 await _repo.SaveTransactionsAsync(newTransactions);
             }
