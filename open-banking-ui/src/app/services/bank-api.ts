@@ -97,4 +97,8 @@ export class BankApiService {
   getAccountInsights(accountNumber: string, startDate: string, endDate: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/Ai/analyze-spending/${accountNumber}?startDate=${startDate}&endDate=${endDate}`, {});
   }
+
+  getDashboardSummary(accountNumber: string, startDate: string, endDate: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/AccountList/dashboard/summary/${accountNumber}?startDate=${startDate}&endDate=${endDate}`);
+  }
 }

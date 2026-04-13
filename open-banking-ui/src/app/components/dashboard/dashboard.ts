@@ -6,11 +6,13 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IbanPipe } from '../../pipes/iban-pipe';
 import { ToastService } from '../../services/toast';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, CommonModule, IbanPipe],
+  imports: [FormsModule, CommonModule, IbanPipe, BaseChartDirective],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -26,7 +28,32 @@ export class DashboardComponent implements OnInit {
   calculationResult: any = null;
   isCalculating: boolean = false;
 
+  // Overview / Summary section properties
+  summaryData: any = null;
+  isSummaryLoading: boolean = false;
+  startDate: string = '';
+  endDate: string = '';
 
+  public doughnutChartLabels: string[] = ['Income', 'Expenses'];
+  public doughnutChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [
+    { data: [0, 0], backgroundColor: ['#16a34a', '#dc2626'], hoverOffset: 4 }
+  ];
+  public doughnutChartOptions: ChartOptions<'doughnut'> = { responsive: true, maintainAspectRatio: false };
+
+  public lineChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [
+      {
+        data: [],
+        label: 'Balance',
+        fill: true,
+        tension: 0.1,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.1)'
+      }
+    ]
+  };
+  public lineChartOptions: ChartOptions<'line'> = { responsive: true, maintainAspectRatio: false };
   constructor(
     private bankApi: BankApiService,
     private authService: AuthService,
@@ -35,10 +62,47 @@ export class DashboardComponent implements OnInit {
     private toastService: ToastService
   ) { }
 
-  // This runs automatically when the page loads
   ngOnInit() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 30);
+
+    this.endDate = end.toISOString().split('T')[0];
+    this.startDate = start.toISOString().split('T')[0];
+
     this.loadAccounts();
     this.loadDepositProducts();
+    this.loadSummary();
+  }
+
+  loadSummary() {
+    this.isSummaryLoading = true;
+    const startIso = new Date(this.startDate).toISOString();
+    const endObj = new Date(this.endDate);
+    endObj.setHours(23, 59, 59, 999);
+    const endIso = endObj.toISOString();
+
+    this.bankApi.getDashboardSummary('all', startIso, endIso).subscribe({
+      next: (data) => {
+        this.summaryData = data;
+        
+        // Inject data into charts
+        this.doughnutChartDatasets[0].data = [data.totalIncome, data.totalExpense];
+        
+        // Map chart points
+        this.lineChartData.labels = data.chartData.map((c: any) => c.dateLabel);
+        this.lineChartData.datasets[0].data = data.chartData.map((c: any) => c.balance);
+
+        this.isSummaryLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load summary', err);
+        this.isSummaryLoading = false;
+        this.toastService.show('Failed to load financial overview', 'error');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   toggleConsentInput() {

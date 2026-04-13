@@ -64,19 +64,19 @@ namespace WebApplication1.Controllers
         [HttpPost("transfer")]
         public async Task<IActionResult> TransferInternal([FromBody] TransferDTO transferDto)
         {
-            // 1. Identify the user making the request from their secure JWT token
+            // Identify the user making the request from their secure JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
 
             try
             {
-                // 2. Hand the data off to service engine
+                // Hand the data off to service
                 var success = await _accountService.TransferInternalAsync(userId, transferDto);
 
                 if (success)
                 {
-                    // 3. Return a clean 200 OK with a success message
+                    // Return 200
                     return Ok(new { message = "Transfer completed successfully." });
                 }
 
@@ -84,8 +84,6 @@ namespace WebApplication1.Controllers
             }
             catch (Exception ex)
             {
-                // 4. Catch the specific business logic errors 
-                // that manually threw in the Repository, and send them to the frontend
                 return BadRequest(new { message = ex.Message });
             }
         }
@@ -137,6 +135,20 @@ namespace WebApplication1.Controllers
 
             // Return the clean DTOs
             return Ok(transactionDtos);
+        }
+
+        [HttpGet("dashboard/summary/{accountNumber}")]
+        public async Task<ActionResult<DashboardSummaryDto>> GetDashboardSummary(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+            var userId = int.Parse(userIdClaim.Value);
+
+            var summary = await _accountService.GetDashboardSummaryAsync(userId, accountNumber, startDate, endDate);
+
+            if (summary == null) return NotFound("Account not found.");
+
+            return Ok(summary);
         }
     }
 }

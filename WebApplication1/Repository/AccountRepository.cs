@@ -61,6 +61,16 @@ namespace WebApplication1.Repository
                             .ToListAsync();
         }
 
+        public async Task<IEnumerable<AccountTransaction>> GetBatchTransactionsAsync(List<int> accountIds, DateTime startDate, DateTime endDate)
+        {
+            return await _db.AccountTransactions
+                            .Where(t => accountIds.Contains(t.AccountListId)
+                                     && t.TransactionDate >= startDate
+                                     && t.TransactionDate <= endDate)
+                            .OrderByDescending(t => t.TransactionDate)
+                            .ToListAsync();
+        }
+
         public async Task<bool> SaveAsync()
         {
             return await _db.SaveChangesAsync() > 0;
@@ -84,27 +94,27 @@ namespace WebApplication1.Repository
 
         public async Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto)
         {
-            //1. BEGIN TRANSACTION
+            
             // If the app crashes at any point, the database will automatically roll back to its original state.
             await using var dbTransaction = await _db.Database.BeginTransactionAsync();
 
             try
             {
-                // 2. FETCH & VALIDATE SENDER (Security)
+                // fetch and validate sender
                 var senderAccount = await _db.AccountLists
                     .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.SenderAccountNumber && a.UserId == userId);
 
                 if (senderAccount == null || senderAccount.ProviderName != "Internal")
                     throw new Exception("Invalid sender account. Ensure it is an internal account that belongs to you.");
 
-                // 3. FETCH & VALIDATE RECEIVER
+                // fetch and validate receiver
                 var receiverAccount = await _db.AccountLists
                     .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.ReceiverAccountNumber);
 
                 if (receiverAccount == null || receiverAccount.ProviderName != "Internal")
                     throw new Exception("Invalid receiver account. Destination must be an active internal account.");
 
-                //4. BUSINESS LOGIC CHECKS
+                // Business rules validation
                 if (transferDto.Amount <= 0)
                     throw new Exception("Transfer amount must be greater than zero.");
 
@@ -114,18 +124,15 @@ namespace WebApplication1.Repository
                 if (senderAccount.CurrencyCode != receiverAccount.CurrencyCode)
                     throw new Exception($"Currency mismatch. Cannot transfer {senderAccount.CurrencyCode} to a {receiverAccount.CurrencyCode} account without FX conversion.");
 
-                // Check if they have enough money to send!
                 if (senderAccount.RemainingBalance < transferDto.Amount)
                     throw new Exception("Insufficient funds.");
 
-                // 5. DO THE MATH
                 senderAccount.Balance -= transferDto.Amount;
                 senderAccount.RemainingBalance -= transferDto.Amount;
 
                 receiverAccount.Balance += transferDto.Amount;
                 receiverAccount.RemainingBalance += transferDto.Amount;
 
-                // 6. CREATE THE AUDIT TRAIL
                 var timestamp = DateTime.UtcNow;
 
                 // The negative transaction for the sender

@@ -12,6 +12,7 @@ namespace WebApplication1.Interface
         Task UpdateAsync(AccountList account);
         Task DeleteAsync(AccountList account);
         Task<IEnumerable<AccountTransaction>> GetAccountTransactionsAsync(int accountId, DateTime startDate, DateTime endDate);
+        Task<IEnumerable<AccountTransaction>> GetBatchTransactionsAsync(List<int> accountIds, DateTime startDate, DateTime endDate);
         Task<bool> SaveAsync();
         Task<List<string>> GetExistingTransactionIdsAsync(int accountId, DateTime startDate, DateTime endDate);
         Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions);

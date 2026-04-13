@@ -90,5 +90,67 @@ namespace WebApplication1.Services
                 TransactionDate = t.TransactionDate
             }).ToList();
         }
+
+        public async Task<DashboardSummaryDto?> GetDashboardSummaryAsync(int userId, string accountNumber, DateTime startDate, DateTime endDate)
+        {
+            var accounts = await _repo.GetUserAccountsAsync(userId);
+            var targetAccounts = new List<Models.AccountList>();
+
+            if (accountNumber == "all")
+            {
+                targetAccounts = accounts.ToList();
+            }
+            else
+            {
+                var account = accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+                if (account != null) targetAccounts.Add(account);
+            }
+
+            if (!targetAccounts.Any()) return null;
+
+            var summary = new DashboardSummaryDto();
+
+            decimal currentTotalBalance = targetAccounts.Sum(a => a.Balance);
+            var accountIds = targetAccounts.Select(a => a.Id).ToList();
+            var allTransactions = await _repo.GetBatchTransactionsAsync(accountIds, startDate, endDate);
+
+            var chartPoints = new List<ChartDataPointDto>();
+            decimal runningBalance = currentTotalBalance;
+
+            // Add the current total balance as the most recent point
+            chartPoints.Add(new ChartDataPointDto { DateLabel = DateTime.Now.ToString("M/d"), Balance = runningBalance });
+
+            foreach (var tx in allTransactions)
+            {
+                if (tx.Amount > 0)
+                    summary.TotalIncome += tx.Amount;
+                else if (tx.Amount < 0)
+                    summary.TotalExpense += Math.Abs(tx.Amount);
+
+                runningBalance -= tx.Amount;
+
+                chartPoints.Add(new ChartDataPointDto
+                {
+                    DateLabel = tx.TransactionDate.ToString("M/d"),
+                    Balance = runningBalance
+                });
+            }
+
+            // Reverse to make it chronological (oldest to newest)
+            chartPoints.Reverse();
+
+            // Group by Day 
+            summary.ChartData = chartPoints
+                .GroupBy(cp => cp.DateLabel)
+                .Select(group => new ChartDataPointDto
+                {
+                    DateLabel = group.Key,
+                    Balance = group.Last().Balance // Grab the final balance of that specific day
+                })
+                .ToList();
+
+            summary.NetTotal = summary.TotalIncome - summary.TotalExpense;
+            return summary;
+        }
     }
 }

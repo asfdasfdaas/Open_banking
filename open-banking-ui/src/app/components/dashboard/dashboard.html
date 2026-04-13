@@ -99,6 +99,85 @@
     </div>
     }
   </div>
+
+  <!--Financial Overview Section-->
+  <div class="mt-12 mb-8 animate-fade-in" *ngIf="accounts.length > 0">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+      <div>
+        <h3 class="text-xl font-semibold text-slate-800 mb-1">Financial Overview</h3>
+        <p class="text-slate-500 text-sm">Overview of cash flow and balance trends across all your accounts.</p>
+      </div>
+
+      <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex-wrap">
+        <input type="date"
+               [(ngModel)]="startDate"
+               (change)="loadSummary()"
+               class="text-sm px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer">
+
+        <span class="text-slate-400 text-sm font-medium">to</span>
+
+        <input type="date"
+               [(ngModel)]="endDate"
+               (change)="loadSummary()"
+               class="text-sm px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-700 bg-slate-50 cursor-pointer">
+      </div>
+    </div>
+
+    @if (isSummaryLoading) {
+      <div class="flex justify-center items-center py-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-slate-500">Calculating summary...</span>
+      </div>
+    } 
+    @else if (summaryData) {
+      <!--Income, expense, net total card-->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Income</p>
+            <p class="text-2xl font-bold text-green-600">+{{ summaryData.totalIncome | number:'1.2-2' }}</p>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Expenses</p>
+            <p class="text-2xl font-bold text-red-600">-{{ summaryData.totalExpense | number:'1.2-2' }}</p>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-50"></div>
+          <div class="relative z-10">
+            <p class="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Net Flow</p>
+            <p class="text-2xl font-bold"
+               [class.text-green-600]="summaryData.netTotal > 0"
+               [class.text-red-600]="summaryData.netTotal < 0"
+               [class.text-slate-800]="summaryData.netTotal === 0">
+              {{ summaryData.netTotal > 0 ? '+' : '' }}{{ summaryData.netTotal | number:'1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!--Income/Expense and Balance Trend Graph-->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!--Income/Expense-->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-80 hover:shadow-md transition-shadow">
+          <h4 class="text-slate-500 font-semibold mb-2 text-center uppercase tracking-wider text-sm">Cash Flow Ratio</h4>
+          <div class="relative flex-grow w-full min-h-0 pb-2">
+            <canvas baseChart [labels]="doughnutChartLabels" [datasets]="doughnutChartDatasets" [options]="doughnutChartOptions" [legend]="true" type="doughnut"></canvas>
+          </div>
+        </div>
+        <!--Balance trend-->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col h-80 hover:shadow-md transition-shadow">
+          <h4 class="text-slate-500 font-semibold mb-2 uppercase tracking-wider text-sm">Balance Trend</h4>
+          <div class="flex-grow relative w-full">
+            <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" type="line"></canvas>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
 <!--Deposit Calculator-->
   <div class="mt-12 mb-8">
     <h3 class="text-xl font-semibold text-slate-800 mb-4">Deposit Calculator</h3>
