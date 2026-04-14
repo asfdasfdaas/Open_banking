@@ -114,40 +114,69 @@ namespace WebApplication1.Services
             var accountIds = targetAccounts.Select(a => a.Id).ToList();
             var allTransactions = await _repo.GetBatchTransactionsAsync(accountIds, startDate, endDate);
 
-            var chartPoints = new List<ChartDataPointDto>();
+            var rawBalanceHistory = new List<(DateTime Date, decimal Balance)>();
             decimal runningBalance = currentTotalBalance;
 
-            // Add the current total balance as the most recent point
-            chartPoints.Add(new ChartDataPointDto { DateLabel = DateTime.Now.ToString("M/d"), Balance = runningBalance });
 
-            foreach (var tx in allTransactions)
+
+            // Add the current total balance as the most recent point
+            rawBalanceHistory.Add((DateTime.Now, runningBalance));
+
+            foreach (var tx in allTransactions) 
             {
-                if (tx.Amount > 0)
-                    summary.TotalIncome += tx.Amount;
-                else if (tx.Amount < 0)
-                    summary.TotalExpense += Math.Abs(tx.Amount);
+                if (tx.Amount > 0) summary.TotalIncome += tx.Amount;
+                else if (tx.Amount < 0) summary.TotalExpense += Math.Abs(tx.Amount);
 
                 runningBalance -= tx.Amount;
 
-                chartPoints.Add(new ChartDataPointDto
-                {
-                    DateLabel = tx.TransactionDate.ToString("M/d"),
-                    Balance = runningBalance
-                });
+                rawBalanceHistory.Add((tx.TransactionDate, runningBalance));
             }
 
             // Reverse to make it chronological (oldest to newest)
-            chartPoints.Reverse();
+            rawBalanceHistory.Reverse();
 
-            // Group by Day 
-            summary.ChartData = chartPoints
-                .GroupBy(cp => cp.DateLabel)
-                .Select(group => new ChartDataPointDto
+            var totalDays = (endDate.Date - startDate.Date).TotalDays;
+            int stepDays = 1; // Default to daily
+
+            if (totalDays > 90) stepDays = 30;     // Monthly view for large ranges
+            else if (totalDays > 28) stepDays = 5; // 5-Day view for medium ranges
+
+            summary.ChartData = new List<ChartDataPointDto>();
+
+            // Establish a fallback balance (the oldest known balance before start date)
+            decimal lastKnownBalance = currentTotalBalance;
+            if (rawBalanceHistory.Any())
+            {
+                lastKnownBalance = rawBalanceHistory.First().Balance;
+            }
+
+
+            for (var dt = startDate.Date; dt <= endDate.Date; dt = dt.AddDays(stepDays))
+            {
+                // Search our history for the most recent transaction that happened on or before this timeline date
+                var historicalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= dt);
+
+
+                if (historicalPoint.Date != default(DateTime))
                 {
-                    DateLabel = group.Key,
-                    Balance = group.Last().Balance // Grab the final balance of that specific day
-                })
-                .ToList();
+                    lastKnownBalance = historicalPoint.Balance;
+                }
+
+                string labelFormat = stepDays >= 30 ? "MMM yyyy" : "M/d";
+
+                summary.ChartData.Add(new ChartDataPointDto
+                {
+                    DateLabel = dt.ToString(labelFormat),
+                    Balance = lastKnownBalance
+                });
+            }
+
+            // Ensure the very last point on the right side of the chart is today's final balance
+            var finalLabel = endDate.ToString(stepDays >= 30 ? "MMM yyyy" : "M/d");
+            if (summary.ChartData.LastOrDefault()?.DateLabel != finalLabel)
+            {
+                summary.ChartData.Add(new ChartDataPointDto { DateLabel = finalLabel, Balance = currentTotalBalance });
+            }
 
             summary.NetTotal = summary.TotalIncome - summary.TotalExpense;
             return summary;

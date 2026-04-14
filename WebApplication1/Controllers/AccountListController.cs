@@ -76,7 +76,6 @@ namespace WebApplication1.Controllers
 
                 if (success)
                 {
-                    // Return 200
                     return Ok(new { message = "Transfer completed successfully." });
                 }
 
