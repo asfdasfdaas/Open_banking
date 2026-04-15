@@ -51,8 +51,8 @@ export class AccountDetailComponent implements OnInit {
         label: 'Balance',
         fill: true,
         tension: 0, // This makes the line curved instead of jagged
-        borderColor: '#2563eb', // Blue-600
-        backgroundColor: 'rgba(37, 99, 235, 0.1)' // Very faint blue underneath the line
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.1)' // faint blue under the line
       }
     ]
   };
@@ -76,7 +76,6 @@ export class AccountDetailComponent implements OnInit {
     this.endDate = end.toISOString().split('T')[0];
     this.startDate = start.toISOString().split('T')[0];
 
-    // Grab the account number
     this.accountNumber = this.route.snapshot.paramMap.get('accountNumber') || '';
 
     if (this.accountNumber) {
@@ -117,7 +116,6 @@ export class AccountDetailComponent implements OnInit {
   loadLedger() {
     this.isLoading = true;
 
-    // Read the dates from the HTML inputs
     const startIso = new Date(this.startDate).toISOString();
     const endObj = new Date(this.endDate);
     endObj.setHours(23, 59, 59, 999);
@@ -212,7 +210,6 @@ export class AccountDetailComponent implements OnInit {
   }
 
   submitTransfer() {
-    // Basic frontend validation
     if (this.transferData.amount <= 0) {
       this.toastService.show('Amount must be greater than zero.', 'error');
       return;
@@ -224,7 +221,7 @@ export class AccountDetailComponent implements OnInit {
 
     this.isTransferring = true;
 
-    // Build the exact DTO the .NET backend expects
+    // Build the DTO the .NET backend expects
     const payload = {
       SenderAccountNumber: this.details.accountNumber,
       ReceiverAccountNumber: this.transferData.receiverAccountNumber,
@@ -257,7 +254,7 @@ export class AccountDetailComponent implements OnInit {
     if (!this.accountNumber || !this.startDate || !this.endDate) return;
 
     this.isAnalyzing = true;
-    this.aiInsights = ''; // Clear previous insights
+    this.aiInsights = ''; // clear previous insights
 
     this.bankApi.getAccountInsights(this.accountNumber, this.startDate, this.endDate).subscribe({
       next: (res) => {

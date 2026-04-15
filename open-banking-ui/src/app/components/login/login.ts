@@ -24,7 +24,6 @@ export class LoginComponent {
   onLogin() {
     this.authService.login(this.credentials).subscribe({
       next: () => {
-        // Login successful! Teleport them to the dashboard.
         this.router.navigate(['/dashboard']);
         this.toastService.show('Logged in successfully', 'success');
       },

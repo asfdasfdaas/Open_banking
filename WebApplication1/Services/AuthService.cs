@@ -76,7 +76,7 @@ namespace WebApplication1.Services
             var expiresAt = jwtToken.ValidTo;
             var timeRemaining = expiresAt - DateTime.UtcNow;
 
-            // Cache the token for its remaining lifespan
+            // cache the token for its remaining lifespan
             if (timeRemaining > TimeSpan.Zero)
             {
                 _cache.Set(token, "Revoked", timeRemaining);

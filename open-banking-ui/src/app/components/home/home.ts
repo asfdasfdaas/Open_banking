@@ -41,7 +41,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // Check if they have a token
     this.loadPopularCurrencies();
 
     this.loadCities();
@@ -90,7 +89,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
           return {
             code: curr.code,
-            // If res is an object, use res.convertedAmount. If res is just a number, use res
             rate: res.convertedAmount !== undefined ? res.convertedAmount : res,
             icon: curr.icon
           };
@@ -106,10 +104,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     forkJoin(requests).subscribe(results => {
       console.log("All requests finished!", results);
 
-      // Filter out any currencies that failed
+      // filter out any currencies that failed
       this.popularRates = results.filter(r => r !== null) as any[];
 
-      // Sort to ensure consistent visual order
+      // sort to ensure consistent visual order
       this.popularRates.sort((a, b) => b.code.localeCompare(a.code));
 
       if (this.popularRates.length === 0) {
@@ -136,7 +134,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
   onCityChange() {
-    // Reset the downstream data
+    // reset the downstream data
     this.selectedDistrictCode = '';
     this.districts = [];
     this.branches = [];

@@ -86,10 +86,10 @@ export class DashboardComponent implements OnInit {
       next: (data) => {
         this.summaryData = data;
         
-        // Inject data into charts
+        // inject data into charts
         this.doughnutChartDatasets[0].data = [data.totalIncome, data.totalExpense];
         
-        // Map chart points
+        // map chart points
         this.lineChartData.labels = data.chartData.map((c: any) => c.dateLabel);
         this.lineChartData.datasets[0].data = data.chartData.map((c: any) => c.balance);
 
@@ -143,7 +143,6 @@ export class DashboardComponent implements OnInit {
   }
 
   viewDetails(accountNumber: string) {
-    // Navigates to exactly: localhost:4200/account/12345
     this.router.navigate(['/account', accountNumber]);
   }
 
@@ -193,13 +192,11 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load deposit products', err);
-        //this.toastService.show('Failed to load deposit products', 'error');
       }
     });
   }
 
   calculateDepositReturn() {
-    // Check if the object itself is selected
     if (!this.selectedProduct || !this.depositAmount || !this.depositDays) {
       this.toastService.show('Please fill in all fields to calculate', 'error');
       return;

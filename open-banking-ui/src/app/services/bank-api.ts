@@ -21,17 +21,14 @@ export class BankApiService {
     return `${this.baseUrl}/banks/${encodeURIComponent(this.normalizeProvider(provider))}`;
   }
 
-  // Fetch the accounts saved in internal database
   getAccounts(): Observable<any> {
     return this.http.get(`${this.baseUrl}/AccountList/get-accounts-list`);
   }
 
-  // Trigger the sync to pull fresh data from the selected bank provider
   syncAccounts(provider?: string): Observable<any> {
     return this.http.post(`${this.banks(provider)}/accounts/sync`, {});
   }
 
-  // Loads account detail. Backend resolves internal vs external via stored ProviderName.
   getAccountDetail(accountNumber: string, provider?: string): Observable<any> {
     return this.http.get(`${this.banks(provider)}/accounts/${encodeURIComponent(accountNumber)}`);
   }

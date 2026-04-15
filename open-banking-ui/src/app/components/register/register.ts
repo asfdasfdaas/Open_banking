@@ -7,7 +7,7 @@ import { ToastService } from '../../services/toast';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule], // Required for textboxes
+  imports: [FormsModule],
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })

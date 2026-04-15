@@ -6,7 +6,7 @@ import { Observable, tap, BehaviorSubject, map, catchError, of } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
-  // Pointing to .NET AuthController
+  // pointing to .NET AuthController
   private baseUrl = 'https://localhost:7277/api/Auth';
 
 
