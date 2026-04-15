@@ -15,10 +15,8 @@ namespace WebApplication1.Repository
         }
         public async Task<User?> Register(User user, string password)
         {
-            // Scramble the password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            // Save to SQL
             _db.User.Add(user);
             await _db.SaveChangesAsync();
             return user;
@@ -32,14 +30,13 @@ namespace WebApplication1.Repository
             var user = await _db.User.FirstOrDefaultAsync(x => x.Id == userId);
             if (user == null)
             {
-                return false; // Bad username or password
+                return false;
             }
             _db.User.Remove(user);
             return await _db.SaveChangesAsync() > 0;
         }
         public async Task<bool> UserExists(string username)
         {
-            // Checks if any user in the DB already has this username
             return await _db.User.AnyAsync(x => x.UserName == username.ToLower());
         }
         public async Task<bool> EmailExists(string email)

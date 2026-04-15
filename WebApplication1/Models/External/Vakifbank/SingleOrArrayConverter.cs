@@ -7,12 +7,12 @@ namespace WebApplication1.Models.External.Vakifbank
     {
         public override List<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // If the bank sends a normal array [ {tx1}, {tx2} ]
+            // if the bank sends a normal array [ {tx1}, {tx2} ]
             if (reader.TokenType == JsonTokenType.StartArray)
             {
                 return JsonSerializer.Deserialize<List<T>>(ref reader, options) ?? new List<T>();
             }
-            // 🚀 If the bank sends a single object {tx1} because there is only 1 transaction
+            // if the bank sends a single object {tx1} because there is only 1 transaction
             else if (reader.TokenType == JsonTokenType.StartObject)
             {
                 var singleItem = JsonSerializer.Deserialize<T>(ref reader, options);

@@ -18,17 +18,16 @@ namespace WebApplication1.Middleware
         {
             try
             {
-                // This tells .NET to continue running the rest of the app (like controllers)
                 await _next(context);
             }
             catch (Exception ex)
             {
-                // If anything fails, it falls back up to here
+                // if anything fails, it falls back up to here
 
-                // 1. Log the error to console/terminal
+                // Log the error to console/terminal
                 _logger.LogError(ex, "An unhandled exception has occurred: {Message}", ex.Message);
 
-                // 2. Format the response for the frontend
+                // Format the response for the frontend
                 await HandleExceptionAsync(context, ex);
             }
         }

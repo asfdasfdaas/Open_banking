@@ -22,7 +22,7 @@ namespace WebApplication1.Services.Providers
 
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}"; //gemini-2.5-flash ya da gemini-3-flash-preview
 
-            // Use the custom context if provided, otherwise default to the general chat persona
+            // use the custom context if provided, otherwise default to the general chat context
             var defaultContext = "You are a professional, highly intelligent financial assistant for a modern open banking platform." +
                 "an app to make managing multiple accounts and finances easier." +
                 "You do not have the capacity to do any action other then just chatting. " +
@@ -64,11 +64,10 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Gemini API Failed: {error}");
             }
 
-            // 5. Parse the deeply nested response to grab just the text
             var responseJson = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<GeminiResponse>(responseJson);
 
-            // Navigate safely through the JSON to find the actual text answer
+            // navigate  through the JSON to find the actual text answer
             var answerText = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
 
             return answerText ?? "Sorry, I couldn't generate a response.";

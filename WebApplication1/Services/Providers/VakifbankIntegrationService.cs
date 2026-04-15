@@ -68,7 +68,7 @@ namespace WebApplication1.Services.Providers
 
             if (_cache.TryGetValue(cacheKey, out string? cachedToken))
             {
-                return cachedToken!; // Cache hit! Return it immediately.
+                return cachedToken!;
             }
 
             var requestBody = new Dictionary<string, string>
@@ -111,14 +111,13 @@ namespace WebApplication1.Services.Providers
 
             var jsonString = await response.Content.ReadAsStringAsync();
 
-            // 1. Tell C# to allow Strings to be converted to Decimals automatically
+            // allow Strings to be converted to Decimals automatically
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
             };
 
-            // 2. Unpack the JSON using the options
             var result = JsonSerializer.Deserialize<AccountListResponse>(jsonString, options);
 
             var accounts = result?.Data?.Accounts;
@@ -184,7 +183,6 @@ namespace WebApplication1.Services.Providers
             var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // Build the request body EXACTLY like Postman
             var requestBody = JsonSerializer.Serialize(new
             {
                 AccountNumber = accountNumber,
@@ -198,10 +196,8 @@ namespace WebApplication1.Services.Providers
 
             if (!response.IsSuccessStatusCode)
             {
-                //  Read the actual error message the bank sent back
                 var errorBody = await response.Content.ReadAsStringAsync();
 
-                //  Throw a custom exception that includes the bank's detailed complaint!
                 throw new Exception($"Bank API rejected the request. Status: {response.StatusCode}. Bank Details: {errorBody}");
             }
 
@@ -234,7 +230,7 @@ namespace WebApplication1.Services.Providers
             var token = await GetBankTokenAsync(consentId);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // 1. Build the JSON body
+            // build the JSON body
             var requestBody = JsonSerializer.Serialize(new
             {
                 TransactionId = transactionId,
@@ -244,19 +240,18 @@ namespace WebApplication1.Services.Providers
 
             var content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
 
-            // 2. Send the request 
+            // send the request 
             var response = await _httpClient.PostAsync("/getReceipt", content);
 
             if (!response.IsSuccessStatusCode)
             {
-                // 2. Read the actual error message the bank sent back
                 var errorBody = await response.Content.ReadAsStringAsync();
 
-                // 3. Throw a custom exception that includes the bank's detailed complaint!
+
                 throw new Exception($"Bank API rejected the request. Status: {response.StatusCode}. Bank Details: {errorBody}");
             }
 
-            // 3. Unpack the JSON
+            // unpack the JSON
             var jsonString = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var result = JsonSerializer.Deserialize<ReceiptResponse>(jsonString, options);
@@ -268,33 +263,30 @@ namespace WebApplication1.Services.Providers
                 throw new Exception("The bank did not return a valid PDF string.");
             }
 
-            // 4. Convert the giant string of text back into a raw PDF file
+            // convert back into a raw PDF file
             return Convert.FromBase64String(base64String);
         }
 
         public async Task<decimal> CalculateCurrencyAsync(string sourceCurrency, decimal amount, string targetCurrency)
         {
-            // 1. Get the token (from cache, or fetch a new one)
             var token = await GetClientCKeyAsync();
 
-            // 2. Build the exact JSON payload the bank expects
             var payload = new
             {
                 SourceCurrencyCode = sourceCurrency,
-                SourceAmount = amount.ToString("0.##"), // Ensures it's formatted cleanly (e.g. "100" or "100.50")
+                SourceAmount = amount.ToString("0.##"), // ensures it's formatted cleanly 
                 TargetCurrencyCode = targetCurrency
             };
 
             var jsonContent = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-            // 3. Create the request and attach the Bearer token
+
             var request = new HttpRequestMessage(HttpMethod.Post, "/currencyCalculator")
             {
                 Content = jsonContent
             };
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // 4. Send it!
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
@@ -302,14 +294,11 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Currency API failed: {errorBody}");
             }
 
-            // 5. Parse the result and return the final SaleAmount
             var responseJson = await response.Content.ReadAsStringAsync();
 
-            // We use JsonSerializerOptions to ignore case, since C# properties are PascalCase but JSON might vary
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var resultData = JsonSerializer.Deserialize<CurrencyCalculatorResponse>(responseJson, options);
 
-            // Convert the string "2.24" into a C# decimal
             if (decimal.TryParse(resultData.Data.Currency.SaleAmount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal finalAmount))
             {
                 return finalAmount;
@@ -320,10 +309,10 @@ namespace WebApplication1.Services.Providers
 
         public async Task<DepositProductResponse> GetDepositProductsAsync()
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Prepare an empty JSON body "{}" as required
+
             var jsonContent = new StringContent("{}", Encoding.UTF8, "application/json");
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/depositProductList")
@@ -332,7 +321,7 @@ namespace WebApplication1.Services.Providers
             };
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // 3. Send the request
+
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
@@ -340,7 +329,7 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Deposit Product API failed: {errorBody}");
             }
 
-            // 4. Parse and return the data
+
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -350,10 +339,10 @@ namespace WebApplication1.Services.Providers
 
         public async Task<BranchListResponse> GetBranchListAsync(string? cityCode = null, string? districtCode = null)
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Build the dynamic payload
+
             var payload = new Dictionary<string, string>();
 
             if (!string.IsNullOrWhiteSpace(cityCode))
@@ -368,7 +357,7 @@ namespace WebApplication1.Services.Providers
             var jsonString = JsonSerializer.Serialize(payload);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 3. Create and send the request
+
             var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankBranchList")
             {
                 Content = jsonContent
@@ -382,7 +371,7 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Branch List API failed: {errorBody}");
             }
 
-            // 4. Parse the result
+
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -392,14 +381,14 @@ namespace WebApplication1.Services.Providers
 
         public async Task<DepositCalculatorResponse> CalculateDepositAsync(DepositCalculatorRequest request)
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Turn our C# request object into JSON
+
             var jsonString = JsonSerializer.Serialize(request);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 3. Create and send the HTTP POST request
+
             var newRequest = new HttpRequestMessage(HttpMethod.Post, "/depositCalculator")
             {
                 Content = jsonContent
@@ -413,7 +402,7 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Deposit Calculator API failed: {errorBody}");
             }
 
-            // 4. Parse the result into our Response DTO
+
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -423,10 +412,10 @@ namespace WebApplication1.Services.Providers
 
         public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Build the dynamic payload
+
             var payload = new Dictionary<string, string>();
 
             if (!string.IsNullOrWhiteSpace(cityCode))
@@ -435,13 +424,13 @@ namespace WebApplication1.Services.Providers
             }
             if (!string.IsNullOrWhiteSpace(districtCode))
             {
-                payload.Add("DistrictCode", districtCode); // Notice: ATMs use DistrictCode, not BankDistrictCode
+                payload.Add("DistrictCode", districtCode); 
             }
 
             var jsonString = JsonSerializer.Serialize(payload);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 3. Create and send the request
+
             var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankATMList")
             {
                 Content = jsonContent
@@ -455,7 +444,6 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"ATM List API failed: {errorBody}");
             }
 
-            // 4. Parse the result safely
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -465,13 +453,13 @@ namespace WebApplication1.Services.Providers
 
         public async Task<CityListResponse> GetCityListAsync()
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Prepare an empty JSON body "{}" as required
+
             var jsonContent = new StringContent("{}", Encoding.UTF8, "application/json");
 
-            // 3. Create and send the request
+
             var request = new HttpRequestMessage(HttpMethod.Post, "/cityList")
             {
                 Content = jsonContent
@@ -485,7 +473,7 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"City List API failed: {errorBody}");
             }
 
-            // 4. Parse the result safely
+
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -495,15 +483,14 @@ namespace WebApplication1.Services.Providers
 
         public async Task<DistrictListResponse> GetDistrictListAsync(string cityCode)
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Build the JSON payload with the required CityCode
+  
             var payload = new { CityCode = cityCode };
             var jsonString = JsonSerializer.Serialize(payload);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 3. Create and send the request
             var request = new HttpRequestMessage(HttpMethod.Post, "/districtList")
             {
                 Content = jsonContent
@@ -517,7 +504,6 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"District List API failed: {errorBody}");
             }
 
-            // 4. Parse the result safely
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -527,15 +513,15 @@ namespace WebApplication1.Services.Providers
 
         public async Task<NeighborhoodListResponse> GetNeighborhoodListAsync(string districtCode)
         {
-            // 1. Get the shared token
+
             var token = await GetClientCKeyAsync();
 
-            // 2. Build the JSON payload with the required DistrictCode
+
             var payload = new { DistrictCode = districtCode };
             var jsonString = JsonSerializer.Serialize(payload);
             var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-            // 3. Create and send the request
+
             var request = new HttpRequestMessage(HttpMethod.Post, "/neighborhoodList")
             {
                 Content = jsonContent
@@ -549,7 +535,7 @@ namespace WebApplication1.Services.Providers
                 throw new Exception($"Neighborhood List API failed: {errorBody}");
             }
 
-            // 4. Parse the result safely
+
             var responseJson = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 

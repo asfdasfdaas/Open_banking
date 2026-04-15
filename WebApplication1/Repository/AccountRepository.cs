@@ -95,7 +95,7 @@ namespace WebApplication1.Repository
         public async Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto)
         {
             
-            // If the app crashes at any point, the database will automatically roll back to its original state.
+            // if the app crashes at any point the database will automatically roll back to its original state
             await using var dbTransaction = await _db.Database.BeginTransactionAsync();
 
             try
@@ -114,7 +114,7 @@ namespace WebApplication1.Repository
                 if (receiverAccount == null || receiverAccount.ProviderName != "Internal")
                     throw new Exception("Invalid receiver account. Destination must be an active internal account.");
 
-                // Business rules validation
+                // business rules validation
                 if (transferDto.Amount <= 0)
                     throw new Exception("Transfer amount must be greater than zero.");
 
@@ -135,7 +135,7 @@ namespace WebApplication1.Repository
 
                 var timestamp = DateTime.UtcNow;
 
-                // The negative transaction for the sender
+                // the negative transaction for the sender
                 var senderTx = new AccountTransaction
                 {
                     AccountListId = senderAccount.Id,
@@ -149,7 +149,7 @@ namespace WebApplication1.Repository
                     CurrencyCode = senderAccount.CurrencyCode
                 };
 
-                // The positive transaction for the receiver
+                // the positive transaction for the receiver
                 var receiverTx = new AccountTransaction
                 {
                     AccountListId = receiverAccount.Id,
@@ -163,10 +163,10 @@ namespace WebApplication1.Repository
                     CurrencyCode = receiverAccount.CurrencyCode
                 };
 
-                // Queue the new transactions to be saved
+                // queue the new transactions to be saved
                 await _db.AccountTransactions.AddRangeAsync(senderTx, receiverTx);
 
-                // 7. SAVE & COMMIT (Durability)
+                // save & commit
                 await SaveAsync();
                 await dbTransaction.CommitAsync();
 

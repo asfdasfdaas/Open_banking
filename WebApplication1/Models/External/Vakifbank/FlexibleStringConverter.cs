@@ -8,13 +8,13 @@ namespace WebApplication1.Models.External.Vakifbank
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // If the bank sends a raw number, convert it to a string format
+            // if the bank sends a raw number, convert it to a string format
             if (reader.TokenType == JsonTokenType.Number)
             {
                 return reader.GetInt32().ToString();
             }
 
-            // If it's a normal string, just read it
+            // if it's a normal string, just read it
             if (reader.TokenType == JsonTokenType.String)
             {
                 return reader.GetString() ?? string.Empty;

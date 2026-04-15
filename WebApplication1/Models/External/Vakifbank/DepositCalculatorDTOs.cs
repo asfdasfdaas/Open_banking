@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Models.External.Vakifbank
 {
-    // 1. The Request Object (What we send to the bank)
+    // The Request Object 
     public class DepositCalculatorRequest
     {
         public decimal Amount { get; set; } = 1;
@@ -12,7 +12,7 @@ namespace WebApplication1.Models.External.Vakifbank
         public int ?TermDays { get; set; }
     }
 
-    // 2. The Response Objects (What the bank sends back)
+    // The Response Objects 
     public class DepositCalculatorResponse
     {
         public DepositCalcDataSection Data { get; set; } = new DepositCalcDataSection();
