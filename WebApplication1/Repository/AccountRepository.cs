@@ -174,17 +174,14 @@ namespace WebApplication1.Repository
             }
             catch (Exception)
             {
-                // ROLLBACK
-                // If ANY step above fails (e.g., insufficient funds, or the DB crashes), 
-                // this line safely reverts the Sender and Receiver balances back to what they were.
+                
                 await dbTransaction.RollbackAsync();
 
-                throw; // Re-throw the error so Controller can read the message (e.g., "Insufficient funds")
+                throw;
             }
         }
         public async Task<AccountList?> GetByAccountNumberAsync(string accountNumber)
         {
-            // Searches the database for the matching string account number
             return await _db.AccountLists.FirstOrDefaultAsync(x => x.AccountNumber == accountNumber);
         }
     }

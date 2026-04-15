@@ -127,19 +127,19 @@ namespace WebApplication1.Services
                 if (tx.Amount > 0) summary.TotalIncome += tx.Amount;
                 else if (tx.Amount < 0) summary.TotalExpense += Math.Abs(tx.Amount);
 
-                runningBalance -= tx.Amount;
-
                 rawBalanceHistory.Add((tx.TransactionDate, runningBalance));
+
+                runningBalance -= tx.Amount;
             }
 
-            // Reverse to make it chronological (oldest to newest)
+            // Reverse to make it oldest to newest
             rawBalanceHistory.Reverse();
 
             var totalDays = (endDate.Date - startDate.Date).TotalDays;
             int stepDays = 1; // Default to daily
 
             if (totalDays > 90) stepDays = 30;     // Monthly view for large ranges
-            else if (totalDays > 28) stepDays = 5; // 5-Day view for medium ranges
+            else if (totalDays > 30) stepDays = 5; // 5-Day view for medium ranges
 
             summary.ChartData = new List<ChartDataPointDto>();
 
@@ -171,7 +171,6 @@ namespace WebApplication1.Services
                 });
             }
 
-            // Ensure the very last point on the right side of the chart is today's final balance
             var finalLabel = endDate.ToString(stepDays >= 30 ? "MMM yyyy" : "M/d");
             if (summary.ChartData.LastOrDefault()?.DateLabel != finalLabel)
             {
