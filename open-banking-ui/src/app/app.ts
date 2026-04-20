@@ -32,7 +32,6 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Prevent memory leaks if this component is ever destroyed
     if (this.authSub) {
       this.authSub.unsubscribe();
     }

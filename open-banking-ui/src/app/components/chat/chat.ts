@@ -15,14 +15,14 @@ export class ChatComponent implements AfterViewChecked {
   userInput: string = '';
   isLoading: boolean = false;
 
-  // Stores the conversation history for the UI
+  // stores the conversation history for the UI
   messages: { sender: 'user' | 'ai', text: string }[] = [];
 
 
   @ViewChild('chatScroll') private chatScrollContainer!: ElementRef;
 
   constructor(private bankApi: BankApiService, private cdr: ChangeDetectorRef) {
-    // Initial greeting when they open the app
+    // initial greeting when they open the app
     this.messages.push({
       sender: 'ai',
       text: 'Hello! I am your AI financial assistant. How can I help you manage your accounts today?'
@@ -43,10 +43,8 @@ export class ChatComponent implements AfterViewChecked {
     this.userInput = '';
     this.isLoading = true;
 
-    // Send it to .NET backend
     this.bankApi.sendChatMessage(text).subscribe({
       next: (res) => {
-        // Catch the AI's reply and display it
         this.messages.push({ sender: 'ai', text: res.reply });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -60,7 +58,7 @@ export class ChatComponent implements AfterViewChecked {
     });
   }
 
-  // Forces the chat window to scroll down every time a new message appears
+  // forces the chat window to scroll down every time a new message appears
   ngAfterViewChecked() {
     this.scrollToBottom();
   }
