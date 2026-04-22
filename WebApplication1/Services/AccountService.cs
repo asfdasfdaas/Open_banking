@@ -112,27 +112,28 @@ namespace WebApplication1.Services
 
             decimal currentTotalBalance = targetAccounts.Sum(a => a.Balance);
             var accountIds = targetAccounts.Select(a => a.Id).ToList();
-            var allTransactions = await _repo.GetBatchTransactionsAsync(accountIds, startDate, endDate);
+
+            var allTransactions = await _repo.GetBatchTransactionsAsync(accountIds, startDate, DateTime.Now);
 
             var rawBalanceHistory = new List<(DateTime Date, decimal Balance)>();
             decimal runningBalance = currentTotalBalance;
 
-
-
-            // Add the current total balance as the most recent point
             rawBalanceHistory.Add((DateTime.Now, runningBalance));
 
-            foreach (var tx in allTransactions) 
+            foreach (var tx in allTransactions)
             {
-                if (tx.Amount > 0) summary.TotalIncome += tx.Amount;
-                else if (tx.Amount < 0) summary.TotalExpense += Math.Abs(tx.Amount);
+                // Only add to Income/Expense if it actually happened before the End Date!
+                if (tx.TransactionDate.Date <= endDate.Date)
+                {
+                    if (tx.Amount > 0) summary.TotalIncome += tx.Amount;
+                    else if (tx.Amount < 0) summary.TotalExpense += Math.Abs(tx.Amount);
+                }
 
+                
                 rawBalanceHistory.Add((tx.TransactionDate, runningBalance));
-
                 runningBalance -= tx.Amount;
             }
 
-            // Reverse to make it oldest to newest
             rawBalanceHistory.Reverse();
 
             var totalDays = (endDate.Date - startDate.Date).TotalDays;
@@ -143,12 +144,7 @@ namespace WebApplication1.Services
 
             summary.ChartData = new List<ChartDataPointDto>();
 
-            // Establish a fallback balance (the oldest known balance before start date)
-            decimal lastKnownBalance = currentTotalBalance;
-            if (rawBalanceHistory.Any())
-            {
-                lastKnownBalance = rawBalanceHistory.First().Balance;
-            }
+            decimal lastKnownBalance = runningBalance;
 
 
             for (var dt = startDate.Date; dt <= endDate.Date; dt = dt.AddDays(stepDays))

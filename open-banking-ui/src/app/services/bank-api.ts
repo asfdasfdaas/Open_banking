@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class BankApiService {
-  // Pointing to .NET port
+  // .NET port
   private readonly baseUrl = 'https://localhost:7277/api';
   private readonly defaultProvider = 'vakifbank';
 

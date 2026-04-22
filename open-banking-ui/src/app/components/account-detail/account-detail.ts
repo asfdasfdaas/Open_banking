@@ -224,7 +224,7 @@ export class AccountDetailComponent implements OnInit {
     // Build the DTO the .NET backend expects
     const payload = {
       SenderAccountNumber: this.details.accountNumber,
-      ReceiverAccountNumber: this.transferData.receiverAccountNumber,
+      ReceiverAccountNumber: String(this.transferData.receiverAccountNumber),
       Amount: this.transferData.amount,
       Description: this.transferData.description
     };
