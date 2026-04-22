@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap, BehaviorSubject, map, catchError, of } from 'rxjs';
@@ -15,7 +16,7 @@ export class AuthService {
 
   public isLoggedIn$ = this.loggedInSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
   register(userData: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/register`, userData);
@@ -40,6 +41,7 @@ export class AuthService {
       tap((isAuthenticated) => this.loggedInSubject.next(isAuthenticated)),
       catchError(() => {
         this.loggedInSubject.next(false);
+        this.router.navigate(['/']);
         return of(false);
       })
     );

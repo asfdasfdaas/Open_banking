@@ -148,12 +148,13 @@ namespace WebApplication1.Services
 
             // fill the chart
             decimal lastKnownBalance = runningBalance;
+            DateTime lastPlottedDate = startDate.Date;
 
             for (var dt = startDate.Date; dt <= endDate.Date; dt = dt.AddDays(stepDays))
             {
-                // Search our history for the most recent transaction that happened on or before this timeline date
-                var historicalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= dt);
+                lastPlottedDate = dt; // Update memory every loop
 
+                var historicalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= dt);
                 if (historicalPoint.Date != default(DateTime))
                 {
                     lastKnownBalance = historicalPoint.Balance;
@@ -171,19 +172,17 @@ namespace WebApplication1.Services
 
 
             var finalLabel = endDate.ToString(stepDays >= 30 ? "MMM yyyy" : "M/d");
-            if (summary.ChartData.LastOrDefault()?.DateLabel != finalLabel)
+            if (lastPlottedDate < endDate.Date)
             {
-                // ask the ledger for the specific balance on the requested End Date
                 var finalHistoricalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= endDate.Date);
 
-                // if we found a point, use it. Otherwise, fallback to the current balance.
                 decimal finalBalance = finalHistoricalPoint.Date != default(DateTime)
                     ? finalHistoricalPoint.Balance
                     : currentTotalBalance;
 
                 summary.ChartData.Add(new ChartDataPointDto
                 {
-                    DateLabel = finalLabel,
+                    DateLabel = endDate.ToString(finalLabel),
                     Balance = finalBalance
                 });
             }
