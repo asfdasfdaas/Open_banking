@@ -93,6 +93,7 @@ namespace WebApplication1.Services
 
         public async Task<DashboardSummaryDto?> GetDashboardSummaryAsync(int userId, string accountNumber, DateTime startDate, DateTime endDate)
         {
+            // determine the accounts for the method - either all or the specified one
             var accounts = await _repo.GetUserAccountsAsync(userId);
             var targetAccounts = new List<Models.AccountList>();
 
@@ -105,37 +106,37 @@ namespace WebApplication1.Services
                 var account = accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
                 if (account != null) targetAccounts.Add(account);
             }
-
             if (!targetAccounts.Any()) return null;
 
-            var summary = new DashboardSummaryDto();
 
+            // get data from db
+            var summary = new DashboardSummaryDto();
             decimal currentTotalBalance = targetAccounts.Sum(a => a.Balance);
             var accountIds = targetAccounts.Select(a => a.Id).ToList();
-
             var allTransactions = await _repo.GetBatchTransactionsAsync(accountIds, startDate, DateTime.Now);
 
+
+            // add today to list and do the math going backwards in time
             var rawBalanceHistory = new List<(DateTime Date, decimal Balance)>();
             decimal runningBalance = currentTotalBalance;
-
             rawBalanceHistory.Add((DateTime.Now, runningBalance));
 
             foreach (var tx in allTransactions)
             {
-                // Only add to Income/Expense if it actually happened before the End Date!
+                // Only add to Income/Expense if it actually happened before the End Date
                 if (tx.TransactionDate.Date <= endDate.Date)
                 {
                     if (tx.Amount > 0) summary.TotalIncome += tx.Amount;
                     else if (tx.Amount < 0) summary.TotalExpense += Math.Abs(tx.Amount);
                 }
 
-                
                 rawBalanceHistory.Add((tx.TransactionDate, runningBalance));
                 runningBalance -= tx.Amount;
             }
-
             rawBalanceHistory.Reverse();
 
+
+            // determine step size for chart
             var totalDays = (endDate.Date - startDate.Date).TotalDays;
             int stepDays = 1; // Default to daily
 
@@ -144,14 +145,14 @@ namespace WebApplication1.Services
 
             summary.ChartData = new List<ChartDataPointDto>();
 
-            decimal lastKnownBalance = runningBalance;
 
+            // fill the chart
+            decimal lastKnownBalance = runningBalance;
 
             for (var dt = startDate.Date; dt <= endDate.Date; dt = dt.AddDays(stepDays))
             {
                 // Search our history for the most recent transaction that happened on or before this timeline date
                 var historicalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= dt);
-
 
                 if (historicalPoint.Date != default(DateTime))
                 {
@@ -167,10 +168,24 @@ namespace WebApplication1.Services
                 });
             }
 
+
+
             var finalLabel = endDate.ToString(stepDays >= 30 ? "MMM yyyy" : "M/d");
             if (summary.ChartData.LastOrDefault()?.DateLabel != finalLabel)
             {
-                summary.ChartData.Add(new ChartDataPointDto { DateLabel = finalLabel, Balance = currentTotalBalance });
+                // ask the ledger for the specific balance on the requested End Date
+                var finalHistoricalPoint = rawBalanceHistory.LastOrDefault(b => b.Date.Date <= endDate.Date);
+
+                // if we found a point, use it. Otherwise, fallback to the current balance.
+                decimal finalBalance = finalHistoricalPoint.Date != default(DateTime)
+                    ? finalHistoricalPoint.Balance
+                    : currentTotalBalance;
+
+                summary.ChartData.Add(new ChartDataPointDto
+                {
+                    DateLabel = finalLabel,
+                    Balance = finalBalance
+                });
             }
 
             summary.NetTotal = summary.TotalIncome - summary.TotalExpense;
