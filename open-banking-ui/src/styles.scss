@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    /* Apply a dark slate color for text, and a very light gray for the background */
+    @apply font-sans text-slate-800 bg-slate-50 antialiased;
+  }
+}
