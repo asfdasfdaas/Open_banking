@@ -102,17 +102,20 @@ namespace WebApplication1.Repository
             {
                 // fetch and validate sender
                 var senderAccount = await _db.AccountLists
-                    .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.SenderAccountNumber && a.UserId == userId);
+                    .FromSqlInterpolated($"SELECT * FROM AccountLists WITH (UPDLOCK) WHERE AccountNumber = {transferDto.SenderAccountNumber} AND UserId = {userId}")
+                    .FirstOrDefaultAsync();
 
                 if (senderAccount == null || senderAccount.ProviderName != "Internal")
                     throw new Exception("Invalid sender account. Ensure it is an internal account that belongs to you.");
 
                 // fetch and validate receiver
                 var receiverAccount = await _db.AccountLists
-                    .FirstOrDefaultAsync(a => a.AccountNumber == transferDto.ReceiverAccountNumber);
+                    .FromSqlInterpolated($"SELECT * FROM AccountLists WITH (UPDLOCK) WHERE AccountNumber = {transferDto.ReceiverAccountNumber}")
+                    .FirstOrDefaultAsync();
 
                 if (receiverAccount == null || receiverAccount.ProviderName != "Internal")
                     throw new Exception("Invalid receiver account. Destination must be an active internal account.");
+
 
                 // business rules validation
                 if (transferDto.Amount <= 0)
