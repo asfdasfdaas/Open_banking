@@ -24,7 +24,7 @@ This file gives AI assistants and contributors the minimum context needed to wor
 
 Main backend folders:
 
-- `Controllers/` -> API endpoints (`AiController`, `AuthController`, `AccountListController`, `VakifbankController`)
+- `Controllers/` -> API endpoints (`AiController`, `AuthController`, `AccountListController`, `BanksController`)
 - `Services/` and `Services/Providers/` -> business logic and third-party integrations
 - `Repository/` -> data access layer
 - `Models/` -> DTOs and external payload models
@@ -72,6 +72,12 @@ From `open-banking-ui/`:
   - `POST /api/ai/chat`
 - Spending analysis endpoint exists in `AiController`:
   - `POST /api/ai/analyze-spending/{accountNumber}?startDate=...&endDate=...`
+- Bank integration endpoints are provider-based in `BanksController`:
+  - `POST /api/Banks/{provider}/accounts/sync`
+  - `GET /api/Banks/{provider}/accounts/{accountNumber}`
+  - `POST /api/Banks/{provider}/accounts/{accountNumber}/transactions/sync?startDate=...&endDate=...`
+  - `GET /api/Banks/{provider}/accounts/{accountNumber}/receipt/{transactionId}`
+  - Reference/catalog endpoints (cities, districts, branches, deposit and currency calculators) are also under `/api/Banks/{provider}/...`
 - CORS currently allows localhost Angular origin in `Program.cs`.
 - Keep controller actions thin; place business logic in services.
 

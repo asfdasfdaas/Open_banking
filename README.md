@@ -72,6 +72,10 @@ Base route pattern: `api/[controller]` (so controller name maps directly to the 
 - `POST /api/Auth/login`
   - Body: `LoginDTO` (username, password)
   - Response: `{ token, expires }`
+- `POST /api/Auth/logout`
+  - Auth required (`[Authorize]`)
+- `GET /api/Auth/check-session`
+  - Auth required (`[Authorize]`)
 - `DELETE /api/Auth/delete-user-account`
   - Auth required (`[Authorize]`)
 - `POST /api/Auth/save-vakifbank-consent`
@@ -106,10 +110,12 @@ Controller: `AccountList` (all routes are under `/api/AccountList`).
 - `DELETE /api/AccountList/{id}delete-account`
 - `GET /api/AccountList/{accountNumber}/transactions?startDate=...&endDate=...`
   - Auth required
+- `GET /api/AccountList/dashboard/summary/{accountNumber}?startDate=...&endDate=...`
+  - Auth required
 
-### *Vakifbank / Bank Integration* This changed with banksController needs update
+### Banks / Provider Integration
 
-Controller: `Vakifbank` (base route `/api/Vakifbank`).
+Controller: `Banks` (base route `/api/Banks`).
 
 Authorized vs anonymous:
 
@@ -118,20 +124,18 @@ Authorized vs anonymous:
 
 Common routes:
 
-- `POST /api/Vakifbank/vakif-accounts` (authorized)
-- `POST /api/Vakifbank/account-transactions/{accountNumber}?startDate=...&endDate=...`
-- `GET /api/Vakifbank/account-detail/{accountNumber}` (currently implemented as `HttpGet`, but the route is under `VakifbankController`)
-- `GET /api/Vakifbank/receipt/{accountNumber}/{transactionId}`
+- `POST /api/Banks/{provider}/accounts/sync` (authorized)
+- `POST /api/Banks/{provider}/accounts/{accountNumber}/transactions/sync?startDate=...&endDate=...` (authorized)
+- `GET /api/Banks/{provider}/accounts/{accountNumber}` (authorized)
+- `GET /api/Banks/{provider}/accounts/{accountNumber}/receipt/{transactionId}` (authorized)
   - Returns `application/pdf`
 - Reference data (anonymous, `POST`):
-  - `POST /api/Vakifbank/cities`
-  - `POST /api/Vakifbank/districts?cityCode=...`
-  - `POST /api/Vakifbank/neighborhoods?districtCode=...`
-  - `POST /api/Vakifbank/branches?cityCode=...&districtCode=...`
-  - `POST /api/Vakifbank/atms?cityCode=...&districtCode=...`
-  - `POST /api/Vakifbank/deposit-products`
-  - `POST /api/Vakifbank/deposit-calculator` (body: `DepositCalculatorRequest`)
-  - `POST /api/Vakifbank/currency-calculator?sourceCurrency=...&amount=...&targetCurrency=...`
+  - `POST /api/Banks/{provider}/cities`
+  - `POST /api/Banks/{provider}/districts?cityCode=...`
+  - `POST /api/Banks/{provider}/branches?cityCode=...&districtCode=...`
+  - `POST /api/Banks/{provider}/deposit-products`
+  - `POST /api/Banks/{provider}/deposit-calculator` (body: `DepositCalculatorRequest`)
+  - `POST /api/Banks/{provider}/currency-calculator?sourceCurrency=...&amount=...&targetCurrency=...`
 
 ## Frontend Notes
 
@@ -140,12 +144,15 @@ Angular lives under `open-banking-ui/` and is a standard Angular CLI app.
 Project commands (from `open-banking-ui/`):
 
 ```powershell
+npm install
 npm start
 npm run build
 npm test
+npm run watch
 ```
 
 The frontend typically calls backend endpoints via Angular services under `open-banking-ui/src/app/services`.
+There is currently no dedicated e2e framework configured.
 
 ## Development Tips / Rules
 
@@ -153,4 +160,4 @@ The frontend typically calls backend endpoints via Angular services under `open-
 - Register new services in `WebApplication1/Program.cs`.
 - Keep DTOs in `WebApplication1/Models/DTOs`.
 - Keep external provider payload models under `WebApplication1/Models/External/...`.
-- Use the AI file `AiGuiedlines.md` as the first place an assistant should look for project context and conventions.
+- Use the AI file `AGENTS.md` as the first place an assistant should look for project context and conventions.
