@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Interface;
 using WebApplication1.Models.DTOs;
+using WebApplication1.Filters;
 
 namespace WebApplication1.Controllers
 {
@@ -62,6 +63,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("transfer")]
+        [Idempotent]
         public async Task<IActionResult> TransferInternal([FromBody] TransferDTO transferDto)
         {
             // Identify the user making the request from their secure JWT token

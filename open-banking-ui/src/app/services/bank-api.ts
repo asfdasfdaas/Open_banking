@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -50,8 +50,12 @@ export class BankApiService {
     });
   }
 
-  transferInternal(payload: { SenderAccountNumber: string, ReceiverAccountNumber: string, Amount: number, Description: string }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/AccountList/transfer`, payload);
+  transferInternal(payload: { SenderAccountNumber: string, ReceiverAccountNumber: string, Amount: number, Description: string }, IdempotencyKey: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'X-Idempotency-Key': IdempotencyKey
+    });
+    return this.http.post(`${this.baseUrl}/AccountList/transfer`, payload, { headers: headers, withCredentials: true });
   }
     
   calculateCurrency(sourceCurrency: string, amount: number, targetCurrency: string): Observable<any> {

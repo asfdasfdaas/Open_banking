@@ -35,6 +35,7 @@ export class AccountDetailComponent implements OnInit {
     amount: 0,
     description: ''
   };
+  idempotencyKey: string = '';
 
   public doughnutChartLabels: string[] = ['Income', 'Expenses'];
   public doughnutChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [
@@ -203,6 +204,7 @@ export class AccountDetailComponent implements OnInit {
     this.isTransferModalOpen = true;
     // Reset the form every time they open it
     this.transferData = { receiverAccountNumber: '', amount: 0, description: '' };
+    this.idempotencyKey = crypto.randomUUID();
   }
 
   closeTransferModal() {
@@ -226,10 +228,10 @@ export class AccountDetailComponent implements OnInit {
       SenderAccountNumber: this.details.accountNumber,
       ReceiverAccountNumber: String(this.transferData.receiverAccountNumber),
       Amount: this.transferData.amount,
-      Description: this.transferData.description
+      Description: this.transferData.description,
     };
 
-    this.bankApi.transferInternal(payload).subscribe({
+    this.bankApi.transferInternal(payload, this.idempotencyKey).subscribe({
       next: (res) => {
         this.isTransferring = false;
         this.closeTransferModal();
