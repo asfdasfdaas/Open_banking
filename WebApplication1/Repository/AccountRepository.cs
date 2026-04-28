@@ -100,6 +100,9 @@ namespace WebApplication1.Repository
 
             try
             {
+                decimal dailyTransferLimit = 5000.00m;
+                var startOfToday = DateTime.UtcNow.Date;
+
                 // fetch and validate sender
                 var senderAccount = await _db.AccountLists
                     .FromSqlInterpolated($"SELECT * FROM AccountLists WITH (UPDLOCK) WHERE AccountNumber = {transferDto.SenderAccountNumber} AND UserId = {userId}")
@@ -116,8 +119,18 @@ namespace WebApplication1.Repository
                 if (receiverAccount == null || receiverAccount.ProviderName != "Internal")
                     throw new Exception("Invalid receiver account. Destination must be an active internal account.");
 
-
                 // business rules validation
+                var outgoingTransfersToday = await GetTotalOutgoingTodayAsync(senderAccount.Id, startOfToday);
+                Console.WriteLine($"Total outgoing transfers today for account {senderAccount.AccountNumber}: {outgoingTransfersToday:C}");
+
+                decimal totalSpentToday = Math.Abs(outgoingTransfersToday);
+
+                if (totalSpentToday + transferDto.Amount > dailyTransferLimit)
+                {
+                    decimal remainingLimit = dailyTransferLimit - totalSpentToday;
+                    throw new Exception($"Daily transfer limit exceeded. You can only transfer up to {remainingLimit:C} more today.");
+                }
+
                 if (transferDto.Amount <= 0)
                     throw new Exception("Transfer amount must be greater than zero.");
 
@@ -186,6 +199,16 @@ namespace WebApplication1.Repository
         public async Task<AccountList?> GetByAccountNumberAsync(string accountNumber)
         {
             return await _db.AccountLists.FirstOrDefaultAsync(x => x.AccountNumber == accountNumber);
+        }
+
+        public async Task<decimal> GetTotalOutgoingTodayAsync(int accountId, DateTime startOfToday)
+        {
+            // The DB math happens here
+            return await _db.AccountTransactions
+                .Where(t => t.AccountListId == accountId
+                         && t.TransactionDate >= startOfToday
+                         && t.Amount < 0)
+                .SumAsync(t => t.Amount);
         }
     }
 }

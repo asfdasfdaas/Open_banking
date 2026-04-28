@@ -190,5 +190,30 @@ namespace WebApplication1.Services
             summary.NetTotal = summary.TotalIncome - summary.TotalExpense;
             return summary;
         }
+
+        public async Task<DailyLimitDto> GetDailyTransferLimitAsync(int userId, string accountNumber)
+        {
+            // The Security Check - ensure the account belongs to the user
+            var dbAccounts = await _repo.GetUserAccountsAsync(userId);
+            var dbAccount = dbAccounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+            if (dbAccount == null)
+                throw new Exception("Account not found in your database.");
+
+            // The Business Rules
+            decimal dailyTransferLimit = 5000.00m;
+            var startOfToday = DateTime.UtcNow.Date;
+
+            // Delegate the math to the transaction repo using the verified account id
+            decimal outgoingTransfersToday = await _repo.GetTotalOutgoingTodayAsync(dbAccount.Id, startOfToday);
+            decimal totalSpentToday = Math.Abs(outgoingTransfersToday);
+
+            // Return the DTO
+            return new DailyLimitDto
+            {
+                Limit = dailyTransferLimit,
+                Used = totalSpentToday,
+                Remaining = dailyTransferLimit - totalSpentToday
+            };
+        }
     }
 }

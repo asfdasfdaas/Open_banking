@@ -18,6 +18,7 @@ namespace WebApplication1.Interface
         Task SaveTransactionsAsync(IEnumerable<AccountTransaction> transactions);
         Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto);
         Task<AccountList?> GetByAccountNumberAsync(string accountNumber);
+        Task<decimal> GetTotalOutgoingTodayAsync(int accountId, DateTime startOfToday);
     }
 }
 

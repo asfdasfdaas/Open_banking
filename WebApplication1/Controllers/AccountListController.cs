@@ -151,5 +151,26 @@ namespace WebApplication1.Controllers
 
             return Ok(summary);
         }
+
+        [HttpGet("{accountNumber}/limits")]
+        public async Task<IActionResult> GetAccountLimits(string accountNumber)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized();
+                }
+
+                var limits = await _accountService.GetDailyTransferLimitAsync(userId, accountNumber);
+
+                return Ok(limits);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+        }
     }
 }

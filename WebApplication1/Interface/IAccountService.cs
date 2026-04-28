@@ -12,5 +12,7 @@ namespace WebApplication1.Interface
         Task<bool> DeleteAccountAsync(int id, int userId);
         Task<IEnumerable<TransactionDTO>?> GetTransactionsAsync(int userId, string accountNumber, DateTime startDate, DateTime endDate);
         Task<DashboardSummaryDto?> GetDashboardSummaryAsync(int userId, string accountNumber, DateTime startDate, DateTime endDate);
+        Task<DailyLimitDto> GetDailyTransferLimitAsync(int userId, string accountNumber);
+
     }
 }
