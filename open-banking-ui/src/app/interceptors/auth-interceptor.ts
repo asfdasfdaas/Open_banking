@@ -14,8 +14,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Only attempt refresh on 401, and don't loop on the refresh/login endpoints
       if (error.status === 401
-        && !req.url.includes('/refresh')
-        && !req.url.includes('/login')) {
+        && (!req.url.includes('/refresh')
+        && !req.url.includes('/login'))) {
+        console.warn('Unauthorized request, attempting token refresh...', error);
 
         return authService.refresh().pipe(
           switchMap((success) => {
@@ -29,6 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
           })
         );
+      }
+      else {
+        console.warn("401,")
       }
       return throwError(() => error);
     })
