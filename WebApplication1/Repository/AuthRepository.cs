@@ -58,5 +58,37 @@ namespace WebApplication1.Repository
             user.VakifbankConsentId = consentId;
             return await _db.SaveChangesAsync() > 0;
         }
+
+        public async Task<RefreshToken?> GetRefreshTokenAsync(string token)
+        {
+            return await _db.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == token && !rt.IsRevoked);
+        }
+
+        public async Task SaveRefreshTokenAsync(RefreshToken refreshToken)
+        {
+            await _db.RefreshTokens.AddAsync(refreshToken);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task RevokeRefreshTokenAsync(string token)
+        {
+            var rt = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.Token == token);
+            if (rt != null)
+            {
+                rt.IsRevoked = true;
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        public async Task RevokeAllUserRefreshTokensAsync(int userId)
+        {
+            var tokens = await _db.RefreshTokens
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .ToListAsync();
+            tokens.ForEach(t => t.IsRevoked = true);
+            await _db.SaveChangesAsync();
+        }
     }
 }

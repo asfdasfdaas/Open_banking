@@ -37,20 +37,28 @@ namespace WebApplication1.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
-            var token = await _authService.LoginAsync(loginDTO);
-            if (token == null) return Unauthorized(new { message = "Invalid credentials" });
+            var result = await _authService.LoginAsync(loginDTO);
+            if (result == null) return Unauthorized(new { message = "Invalid credentials" });
 
-            // Create the cookie options
-            var cookieOptions = new CookieOptions
+            var (accessToken, refreshToken) = result.Value;
+
+            Response.Cookies.Append("jwt_token", accessToken, new CookieOptions
             {
-                HttpOnly = true, // Hides it from Angular/JavaScript
-                Secure = true,   // Requires HTTPS
-                SameSite = SameSiteMode.None, //Angular is port 4200, .NET is 7277
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddMinutes(15)
-            };
+            });
 
-            // Attach the cookie to the HTTP Response
-            Response.Cookies.Append("jwt_token", token, cookieOptions);
+            // Store refresh token in a separate HttpOnly cookie
+            Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/api/Auth" // Scoped: only sent to auth endpoints
+            });
 
             return Ok(new { message = "Logged in successfully" });
         }
@@ -73,6 +81,15 @@ namespace WebApplication1.Controllers
                 Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(-1)
+            });
+
+            Response.Cookies.Append("refresh_token", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(-1),
+                Path = "/api/Auth"
             });
 
             return Ok(new { message = "Successfully logged out." });
@@ -115,6 +132,41 @@ namespace WebApplication1.Controllers
         public IActionResult CheckSession()
         {
             return Ok(new { isAuthenticated = true });
+        }
+
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken)
+                || string.IsNullOrEmpty(refreshToken))
+                return Unauthorized(new { message = "No refresh token found." });
+
+            var result = await _authService.RefreshAsync(refreshToken);
+
+            if (result == null)
+                return Unauthorized(new { message = "Refresh token is invalid or expired. Please log in again." });
+
+            var (newAccessToken, newRefreshToken) = result.Value;
+
+            Response.Cookies.Append("jwt_token", newAccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddMinutes(15)
+            });
+
+            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/api/Auth"
+            });
+
+            return Ok(new { message = "Token refreshed." });
         }
     }
 }

@@ -16,6 +16,8 @@ export class AuthService {
 
   public isLoggedIn$ = this.loggedInSubject.asObservable();
 
+  private readonly refreshUrl = 'https://localhost:7277/api/Auth/refresh';
+
   constructor(private http: HttpClient, private router: Router) { }
 
   register(userData: any): Observable<any> {
@@ -38,12 +40,9 @@ export class AuthService {
   checkSession(): Observable<boolean> {
     return this.http.get(`${this.baseUrl}/check-session`).pipe(
       map(() => true),
-      tap((isAuthenticated) => this.loggedInSubject.next(isAuthenticated)),
-      catchError(() => {
-        this.loggedInSubject.next(false);
-        this.router.navigate(['/']);
-        return of(false);
-      })
+      tap(() => this.loggedInSubject.next(true)),
+      // If the JWT expired, try to refresh silently before giving up
+      catchError(() => this.refresh())
     );
   }
 
@@ -62,5 +61,16 @@ export class AuthService {
   saveVakifbankConsent(consentId: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post(`${this.baseUrl}/save-vakifbank-consent`, `"${consentId}"`, { headers });
+  }
+
+  refresh(): Observable<boolean> {
+    return this.http.post(this.refreshUrl, {}).pipe(
+      map(() => true),
+      tap(() => this.loggedInSubject.next(true)),
+      catchError(() => {
+        this.loggedInSubject.next(false);
+        return of(false);
+      })
+    );
   }
 }

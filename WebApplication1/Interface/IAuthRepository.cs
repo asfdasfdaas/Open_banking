@@ -11,5 +11,9 @@ namespace WebApplication1.Interface
         Task<bool> EmailExists(string email);
         Task<string?> GetVakifbankConsentIdAsync(int userId);
         Task<bool> SaveVakifbankConsentAsync(int userId, string consentId);
+        Task<RefreshToken?> GetRefreshTokenAsync(string token);
+        Task SaveRefreshTokenAsync(RefreshToken refreshToken);
+        Task RevokeRefreshTokenAsync(string token);
+        Task RevokeAllUserRefreshTokensAsync(int userId);
     }
 }

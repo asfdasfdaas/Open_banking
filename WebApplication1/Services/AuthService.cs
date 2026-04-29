@@ -1,11 +1,12 @@
-using WebApplication1.Interface;
-using WebApplication1.Models;
-using WebApplication1.Models.DTOs;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using WebApplication1.Interface;
+using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services
 {
@@ -48,15 +49,16 @@ namespace WebApplication1.Services
             return (true, "User registered successfully.");
         }
 
-        public async Task<string?> LoginAsync(LoginDTO loginDTO)
+        public async Task<(string AccessToken, string RefreshToken)?> LoginAsync(LoginDTO loginDTO)
         {
             var user = await _repo.GetByUsernameAsync(loginDTO.Username.ToLower());
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.PasswordHash))
-            {
                 return null;
-            }
 
-            return CreateToken(user);
+            var accessToken = CreateToken(user);
+            var refreshToken = await CreateRefreshTokenAsync(user.Id);
+
+            return (accessToken, refreshToken);
         }
 
         public async Task<bool> DeleteUserAsync(int userId)
@@ -85,6 +87,7 @@ namespace WebApplication1.Services
             var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out var userId))
             {
+                await _repo.RevokeAllUserRefreshTokensAsync(userId);
                 var consentId = await _repo.GetVakifbankConsentIdAsync(userId);
                 if (!string.IsNullOrWhiteSpace(consentId))
                 {
@@ -117,6 +120,36 @@ namespace WebApplication1.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<(string AccessToken, string RefreshToken)?> RefreshAsync(string refreshToken)
+        {
+            var storedToken = await _repo.GetRefreshTokenAsync(refreshToken);
+
+            if (storedToken == null || storedToken.ExpiresAt < DateTime.UtcNow || storedToken.User == null)
+                return null;
+
+            // Rotate: revoke old, issue new
+            await _repo.RevokeRefreshTokenAsync(refreshToken);
+
+            var newAccessToken = CreateToken(storedToken.User);
+            var newRefreshToken = await CreateRefreshTokenAsync(storedToken.UserId);
+
+            return (newAccessToken, newRefreshToken);
+        }
+
+        private async Task<string> CreateRefreshTokenAsync(int userId)
+        {
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            var refreshToken = new RefreshToken
+            {
+                Token = token,
+                UserId = userId,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedAt = DateTime.UtcNow
+            };
+            await _repo.SaveRefreshTokenAsync(refreshToken);
+            return token;
         }
     }
 }
