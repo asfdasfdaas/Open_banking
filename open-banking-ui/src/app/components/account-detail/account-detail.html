@@ -37,6 +37,7 @@
           Transfer Money
         </button>
         }
+
         <span class="block text-slate-400 text-xs uppercase tracking-wider mb-0.5">IBAN</span>
         <div class="flex items-center justify-end gap-2">
           <span class="font-mono text-white tracking-widest">{{ details.iban | iban }}</span>
@@ -49,7 +50,6 @@
             </svg>
           </button>
         </div>
-
       </div>
 
       <div class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-slate-300 text-right">
@@ -80,7 +80,47 @@
         }
       </div>
     </div>
+  </div>
 
+  <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-xl mt-6 mb-6">
+    <h3 class="text-sm font-semibold text-slate-500 mb-4">Daily Transfer Limit</h3>
+
+    @if (isLoading) {
+    <div class="space-y-3 animate-pulse">
+      <div class="flex justify-between items-end">
+        <div class="h-8 bg-slate-200 rounded w-1/3"></div>
+        <div class="h-4 bg-slate-100 rounded w-1/4"></div>
+      </div>
+      <div class="h-2.5 bg-slate-100 rounded-full w-full mt-4"></div>
+    </div>
+    }
+
+    @else if (limitData) {
+    <!-- The Live Data UI -->
+    <div class="flex justify-between items-end mb-2">
+      <p class="text-2xl font-bold text-slate-800 tabular-nums">
+        {{ limitData.used | currency }}
+        <span class="text-sm font-normal text-slate-400">
+          / {{ limitData.limit | currency }}
+        </span>
+      </p>
+
+      <!-- Dynamic text color based on percentage -->
+      <p class="text-sm font-medium tabular-nums"
+         [ngClass]="usagePercentage > 90 ? 'text-red-500' : 'text-emerald-600'">
+        {{ limitData.remaining | currency }} remaining
+      </p>
+    </div>
+
+    <!-- The Progress Bar Track -->
+    <div class="w-full bg-slate-100 rounded-full h-2.5 mt-4 overflow-hidden">
+      <!-- The dynamic colored fill -->
+      <div class="h-2.5 rounded-full transition-all duration-1000 ease-out"
+           [ngClass]="usagePercentage > 90 ? 'bg-red-500' : 'bg-emerald-600'"
+           [style.width.%]="usagePercentage">
+      </div>
+    </div>
+    }
   </div>
 
   <!--transaction date range-->
@@ -186,6 +226,7 @@
 
   </div>
   }
+
 
   <div class="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl text-white">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

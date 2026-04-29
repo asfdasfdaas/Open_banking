@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { BankApiService } from '../../services/bank-api';
+import { BankApiService, DailyLimitDto } from '../../services/bank-api';
 import { FormsModule } from '@angular/forms';
 import { IbanPipe } from '../../pipes/iban-pipe';
 import { BaseChartDirective } from 'ng2-charts';
@@ -36,6 +36,9 @@ export class AccountDetailComponent implements OnInit {
     description: ''
   };
   idempotencyKey: string = '';
+
+  limitData: DailyLimitDto | null = null;
+  usagePercentage: number = 0;
 
   public doughnutChartLabels: string[] = ['Income', 'Expenses'];
   public doughnutChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [
@@ -80,6 +83,7 @@ export class AccountDetailComponent implements OnInit {
     this.accountNumber = this.route.snapshot.paramMap.get('accountNumber') || '';
 
     if (this.accountNumber) {
+      this.fetchLimits();
       this.loadDetails();
 
       this.loadLedger();
@@ -269,6 +273,21 @@ export class AccountDetailComponent implements OnInit {
         this.aiInsights = "Unable to generate insights at this time. Please try again later.";
         this.isAnalyzing = false;
         this.cdr.detectChanges();
+      }
+    });
+  }
+  fetchLimits() {
+    this.bankApi.getAccountLimits(this.accountNumber).subscribe({
+      next: (data) => {
+        this.limitData = data;
+
+        this.usagePercentage = Math.min((data.used / data.limit) * 100, 100);
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load daily limits', err);
+        this.isLoading = false;
       }
     });
   }

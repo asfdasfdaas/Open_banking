@@ -55,7 +55,7 @@
     }
     @else {
     <!--Linked accounts-->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-30">
       @for (account of accounts; track account.accountNumber) {
       <div class="bg-[#fcba00] rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col">
 
@@ -91,7 +91,7 @@
         </div>
 
         <button (click)="viewDetails(account.accountNumber)"
-                class="bg-slate-100 mt-auto w-full border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">
+                class="bg-slate-100 mt-auto w-full border border-slate-900 hover:bg-blue-300 hover:shadow-md border-2 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">
           View Details & Transactions
         </button>
       </div>
@@ -207,7 +207,7 @@
           </div>
         </div>
 
-        <button (click)="calculateDepositReturn()" [disabled]="isCalculating" class="w-full bg-[#14213D] hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors mt-2 disabled:opacity-50">
+        <button (click)="calculateDepositReturn()" [disabled]="isCalculating" class="w-full border border-black bg-slate-300 text-black hover:bg-slate-900 hover:text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors mt-2 disabled:opacity-50">
           @if(isCalculating) {
           Calculating...
           } @else {

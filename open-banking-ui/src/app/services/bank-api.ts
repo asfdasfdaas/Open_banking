@@ -1,16 +1,25 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+export interface DailyLimitDto {
+  limit: number;
+  used: number;
+  remaining: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
+
+
 export class BankApiService {
   // .NET port
   private readonly baseUrl = 'https://localhost:7277/api';
   private readonly defaultProvider = 'vakifbank';
 
   constructor(private readonly http: HttpClient) { }
+
+
 
   private normalizeProvider(provider?: string): string {
     const p = (provider ?? this.defaultProvider).trim();
@@ -101,5 +110,12 @@ export class BankApiService {
 
   getDashboardSummary(accountNumber: string, startDate: string, endDate: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/AccountList/dashboard/summary/${accountNumber}?startDate=${startDate}&endDate=${endDate}`);
+  }
+
+  getAccountLimits(accountNumber: string): Observable<DailyLimitDto> {
+    return this.http.get<DailyLimitDto>(
+      `${this.baseUrl}/AccountList/${accountNumber}/limits`,
+      { withCredentials: true }
+    );
   }
 }
