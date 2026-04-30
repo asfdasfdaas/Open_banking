@@ -5,7 +5,7 @@ namespace WebApplication1.Services
 {
     public class RefreshTokenCleanService : BackgroundService
     {
-        private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(1);
+        private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(10);
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<RefreshTokenCleanService> _logger;
 
