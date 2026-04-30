@@ -50,7 +50,6 @@ namespace WebApplication1.Controllers
                 Expires = DateTime.UtcNow.AddMinutes(15)
             });
 
-            // Store refresh token in a separate HttpOnly cookie
             Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
@@ -63,17 +62,19 @@ namespace WebApplication1.Controllers
             return Ok(new { message = "Logged in successfully" });
         }
 
-        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            if (!Request.Cookies.TryGetValue("jwt_token", out var token) || string.IsNullOrEmpty(token))
+            Request.Cookies.TryGetValue("jwt_token", out var accessToken);
+            Request.Cookies.TryGetValue("refresh_token", out var refreshToken);
+
+            if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
             {
                 return BadRequest(new { message = "No active session found." });
             }
 
             // Hand off to the Service layer
-            await _authService.LogoutAsync(token);
+            await _authService.LogoutAsync(accessToken, refreshToken);
 
             Response.Cookies.Append("jwt_token", "", new CookieOptions
             {

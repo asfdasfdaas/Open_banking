@@ -12,6 +12,7 @@ namespace WebApplication1.Interface
         Task<string?> GetVakifbankConsentIdAsync(int userId);
         Task<bool> SaveVakifbankConsentAsync(int userId, string consentId);
         Task<RefreshToken?> GetRefreshTokenAsync(string token);
+        Task<RefreshToken?> GetRefreshTokenByTokenAsync(string token);
         Task SaveRefreshTokenAsync(RefreshToken refreshToken);
         Task RevokeRefreshTokenAsync(string token);
         Task RevokeAllUserRefreshTokensAsync(int userId);

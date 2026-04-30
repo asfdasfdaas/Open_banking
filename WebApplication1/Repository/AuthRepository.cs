@@ -66,6 +66,13 @@ namespace WebApplication1.Repository
                 .FirstOrDefaultAsync(rt => rt.Token == token && !rt.IsRevoked);
         }
 
+        public async Task<RefreshToken?> GetRefreshTokenByTokenAsync(string token)
+        {
+            return await _db.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == token);
+        }
+
         public async Task SaveRefreshTokenAsync(RefreshToken refreshToken)
         {
             await _db.RefreshTokens.AddAsync(refreshToken);

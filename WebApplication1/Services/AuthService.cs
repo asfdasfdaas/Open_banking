@@ -55,6 +55,8 @@ namespace WebApplication1.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.PasswordHash))
                 return null;
 
+            await _repo.RevokeAllUserRefreshTokensAsync(user.Id);
+
             var accessToken = CreateToken(user);
             var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
@@ -71,29 +73,51 @@ namespace WebApplication1.Services
             return await _repo.SaveVakifbankConsentAsync(userId, consentId);
         }
 
-        public async Task LogoutAsync(string token)
+        public async Task LogoutAsync(string? accessToken, string? refreshToken)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(token);
-            var expiresAt = jwtToken.ValidTo;
-            var timeRemaining = expiresAt - DateTime.UtcNow;
+            int? userId = null;
 
-            // cache the token for its remaining lifespan
-            if (timeRemaining > TimeSpan.Zero)
+            if (!string.IsNullOrWhiteSpace(accessToken))
             {
-                _cache.Set(token, "Revoked", timeRemaining);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(accessToken);
+                var expiresAt = jwtToken.ValidTo;
+                var timeRemaining = expiresAt - DateTime.UtcNow;
+
+                // Cache the token for its remaining lifespan.
+                if (timeRemaining > TimeSpan.Zero)
+                {
+                    _cache.Set(accessToken, "Revoked", timeRemaining);
+                }
+
+                var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out var parsedUserId))
+                {
+                    userId = parsedUserId;
+                }
             }
 
-            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdClaim, out var userId))
+            if (!userId.HasValue && !string.IsNullOrWhiteSpace(refreshToken))
             {
-                await _repo.RevokeAllUserRefreshTokensAsync(userId);
-                var consentId = await _repo.GetVakifbankConsentIdAsync(userId);
-                if (!string.IsNullOrWhiteSpace(consentId))
+                var storedRefreshToken = await _repo.GetRefreshTokenByTokenAsync(refreshToken);
+                if (storedRefreshToken != null)
                 {
-                    var cacheKey = $"VakifbankToken_{consentId}";
-                    _cache.Remove(cacheKey);
+                    userId = storedRefreshToken.UserId;
                 }
+            }
+
+            if (!userId.HasValue)
+            {
+                return;
+            }
+
+            await _repo.RevokeAllUserRefreshTokensAsync(userId.Value);
+
+            var consentId = await _repo.GetVakifbankConsentIdAsync(userId.Value);
+            if (!string.IsNullOrWhiteSpace(consentId))
+            {
+                var cacheKey = $"VakifbankToken_{consentId}";
+                _cache.Remove(cacheKey);
             }
         }
 
