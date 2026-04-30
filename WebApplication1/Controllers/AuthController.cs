@@ -56,7 +56,7 @@ namespace WebApplication1.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddHours(10),
                 Path = "/api/Auth" // Scoped: only sent to auth endpoints
             });
 
@@ -162,7 +162,7 @@ namespace WebApplication1.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddHours(10),
                 Path = "/api/Auth"
             });
 

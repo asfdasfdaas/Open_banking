@@ -145,7 +145,7 @@ namespace WebApplication1.Services
             {
                 Token = token,
                 UserId = userId,
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = DateTime.UtcNow.AddHours(10),
                 CreatedAt = DateTime.UtcNow
             };
             await _repo.SaveRefreshTokenAsync(refreshToken);
