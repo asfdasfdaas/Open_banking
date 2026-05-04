@@ -26,7 +26,13 @@ builder.Services.AddHttpClient<IBankIntegrationService, VakifbankIntegrationServ
 });
 builder.Services.AddHttpClient<IGeminiIntegrationService, GeminiIntegrationService>();
 
-builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
+builder.Services.AddHttpClient<IAiAssistantService, AiAssistantService>(client =>
+{
+
+    client.BaseAddress = new Uri("http://localhost:11434");
+
+    client.Timeout = TimeSpan.FromMinutes(2);
+});
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
