@@ -12,7 +12,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Only attempt refresh on 401, and don't loop on the refresh/login endpoints
       if (error.status === 401
         && !req.url.includes('/refresh')
         && !req.url.includes('/login')
@@ -23,7 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return authService.refresh().pipe(
           switchMap((success) => {
             if (success) {
-              // Retry the original request now that we have a fresh JWT
+              // Retry the original request 
               return next(req.clone({ withCredentials: true }));
             }
             // Refresh also failed — force logout

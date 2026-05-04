@@ -4,6 +4,7 @@ import { DashboardComponent } from './components/dashboard/dashboard';
 import { RegisterComponent } from './components/register/register';
 import { LoginComponent } from './components/login/login';
 import { AccountDetailComponent } from './components/account-detail/account-detail';
+import { AccountCreateComponent } from './components/account-create/account-create';
 
 export const routes: Routes = [
   //default route
@@ -11,9 +12,9 @@ export const routes: Routes = [
 
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-
-  // When the user visits the root URL (localhost:4200), load the Dashboard
   { path: 'dashboard', component: DashboardComponent },
+
+  { path: 'accounts/new', component: AccountCreateComponent },
 
   { path: 'account/:accountNumber', component: AccountDetailComponent },
   
