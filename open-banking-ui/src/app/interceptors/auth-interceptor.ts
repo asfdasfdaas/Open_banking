@@ -1,40 +1,34 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth';
-import { catchError, switchMap, throwError } from 'rxjs';
-import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const router = inject(Router);
 
+  // Automatically attach cookies to every outgoing request
   const cloned = req.clone({ withCredentials: true });
 
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
+
+      // If the backend rejects the request because the 15-minute JWT died...
       if (error.status === 401
         && !req.url.includes('/refresh')
         && !req.url.includes('/login')
         && !req.url.includes('/register')
         && !req.url.includes('/logout')) {
-        console.warn('Unauthorized request, attempting token refresh...', error);
 
-        return authService.refresh().pipe(
-          switchMap((success) => {
-            if (success) {
-              // Retry the original request 
-              return next(req.clone({ withCredentials: true }));
-            }
-            // Refresh also failed — force logout
-            authService.logout();
-            router.navigate(['/login']);
-            return throwError(() => error);
-          })
-        );
+        console.warn('Unauthorized request, session expired. Enforcing logout...', error);
+
+        // instantly log them out. No automatic refreshing.
+        authService.logout();
       }
-      else {
-        console.warn("401,")
+      else if (error.status === 401) {
+        console.warn("401 on an auth route, ignoring interceptor logic.");
       }
+
+      // Always pass the error along so the component UI can react if needed
       return throwError(() => error);
     })
   );
