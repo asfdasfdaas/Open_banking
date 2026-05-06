@@ -5,6 +5,7 @@ import { ToastComponent } from './components/toast/toast';
 import { ToastService } from './services/toast';
 import { ChatComponent } from './components/chat/chat';
 import { Subscription } from 'rxjs'; // 🚀 Import Subscription
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +25,15 @@ export class App implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.authService.checkSession().subscribe();
+    this.authService.checkSession().pipe(
+      switchMap((session) => {
+        if (!session || !session.isAuthenticated) {
+          return this.authService.initializeSessionFlow(0);
+        }
+
+        return this.authService.initializeSessionFlow(session.remainingSeconds);
+      })
+    ).subscribe();
 
     this.authSub = this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;

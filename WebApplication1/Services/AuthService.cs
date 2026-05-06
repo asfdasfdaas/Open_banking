@@ -137,7 +137,7 @@ namespace WebApplication1.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddMinutes(15),
+                Expires = DateTime.Now.AddMinutes(10),
                 SigningCredentials = creds
             };
 
@@ -146,11 +146,14 @@ namespace WebApplication1.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public async Task<(string AccessToken, string RefreshToken)?> RefreshAsync(string refreshToken)
+        public async Task<(string AccessToken, string RefreshToken)?> RefreshAsync(string refreshToken, int userId)
         {
             var storedToken = await _repo.GetRefreshTokenAsync(refreshToken);
 
-            if (storedToken == null || storedToken.ExpiresAt < DateTime.UtcNow || storedToken.User == null)
+            if (storedToken == null
+                || storedToken.ExpiresAt < DateTime.UtcNow
+                || storedToken.User == null
+                || storedToken.UserId != userId)
                 return null;
 
             // Rotate: revoke old, issue new

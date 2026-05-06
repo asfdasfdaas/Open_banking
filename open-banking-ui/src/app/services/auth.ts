@@ -3,6 +3,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap, BehaviorSubject, map, catchError, of } from 'rxjs';
 
+export interface SessionStatus {
+  isAuthenticated: boolean;
+  remainingSeconds: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,6 +22,10 @@ export class AuthService {
   public isLoggedIn$ = this.loggedInSubject.asObservable();
 
   private readonly refreshUrl = 'https://localhost:7277/api/Auth/refresh';
+  private readonly checkSessionUrl = 'https://localhost:7277/api/Auth/check-session';
+  private readonly promptBeforeExpiryMs = 60_000; // 1 minute before expiry prompt
+  private promptTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private expiryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -29,6 +38,7 @@ export class AuthService {
       tap(() => {
         // JWT is now in an HttpOnly cookie, so a successful login means authenticated.
         this.loggedInSubject.next(true);
+        this.startSessionTimers(15 * 60);
       })
     );
   }
@@ -37,16 +47,21 @@ export class AuthService {
     return this.loggedInSubject.value;
   }
 
-  checkSession(): Observable<boolean> {
-    return this.http.get(`${this.baseUrl}/check-session`).pipe(
-      map(() => true),
-      tap(() => this.loggedInSubject.next(true)),
-      // If the JWT expired, try to refresh silently before giving up
-      catchError(() => this.refresh())
+  checkSession(): Observable<SessionStatus | null> {
+    return this.http.get<SessionStatus>(this.checkSessionUrl).pipe(
+      tap((session) => {
+        this.loggedInSubject.next(session.isAuthenticated);
+      }),
+      catchError(() => {
+        this.clearSessionTimers();
+        this.loggedInSubject.next(false);
+        return of(null);
+      })
     );
   }
 
   logout(): void {
+    this.clearSessionTimers();
     this.loggedInSubject.next(false);
     this.http.post(`${this.baseUrl}/logout`, {}).subscribe({
       next: () => {
@@ -66,11 +81,74 @@ export class AuthService {
   refresh(): Observable<boolean> {
     return this.http.post(this.refreshUrl, {}).pipe(
       map(() => true),
-      tap(() => this.loggedInSubject.next(true)),
+      tap(() => {
+        this.loggedInSubject.next(true);
+        this.startSessionTimers(15 * 60);
+      }),
       catchError(() => {
+        this.clearSessionTimers();
         this.loggedInSubject.next(false);
         return of(false);
       })
     );
+  }
+
+  initializeSessionFlow(remainingSeconds: number): Observable<boolean> {
+    if (remainingSeconds <= 0) {
+      this.clearSessionTimers();
+      this.loggedInSubject.next(false);
+      return of(false);
+    }
+
+    if (remainingSeconds <= 5 * 60) {
+      return this.refresh();
+    }
+
+    this.startSessionTimers(remainingSeconds);
+    return of(true);
+  }
+
+  private startSessionTimers(remainingSeconds: number): void {
+    this.clearSessionTimers();
+
+    const remainingMs = Math.max(remainingSeconds * 1000, 0);
+    const promptDelay = Math.max(remainingMs - this.promptBeforeExpiryMs, 0);
+
+    this.promptTimeoutId = setTimeout(() => {
+      this.handleSessionExtensionPrompt();
+    }, promptDelay);
+
+    this.expiryTimeoutId = setTimeout(() => {
+      this.logout();
+      this.router.navigate(['/']);
+    }, remainingMs);
+  }
+
+  private clearSessionTimers(): void {
+    if (this.promptTimeoutId) {
+      clearTimeout(this.promptTimeoutId);
+      this.promptTimeoutId = null;
+    }
+
+    if (this.expiryTimeoutId) {
+      clearTimeout(this.expiryTimeoutId);
+      this.expiryTimeoutId = null;
+    }
+  }
+
+  private handleSessionExtensionPrompt(): void {
+    const shouldContinue = window.confirm(
+      'Your session is about to expire in under a minute. Continue session?'
+    );
+
+    if (shouldContinue) {
+      this.refresh().subscribe((success) => {
+        if (!success) {
+          this.router.navigate(['/']);
+        }
+      });
+      return;
+    }
+
   }
 }

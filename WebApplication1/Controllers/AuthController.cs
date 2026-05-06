@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebApplication1.Interface;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
@@ -132,18 +133,34 @@ namespace WebApplication1.Controllers
         [HttpGet("check-session")]
         public IActionResult CheckSession()
         {
-            return Ok(new { isAuthenticated = true });
+            var expClaim = User.FindFirst("exp")?.Value;
+            if (!long.TryParse(expClaim, out var expUnix))
+            {
+                return Unauthorized(new { isAuthenticated = false, remainingSeconds = 0 });
+            }
+
+            var expiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expUnix);
+            var remainingSeconds = (int)Math.Max((expiresAtUtc - DateTimeOffset.UtcNow).TotalSeconds, 0);
+
+            return Ok(new { isAuthenticated = true, remainingSeconds });
         }
 
 
+        [Authorize]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var authenticatedUserId))
+            {
+                return Unauthorized(new { message = "Invalid token identity." });
+            }
+
             if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken)
                 || string.IsNullOrEmpty(refreshToken))
                 return Unauthorized(new { message = "No refresh token found." });
 
-            var result = await _authService.RefreshAsync(refreshToken);
+            var result = await _authService.RefreshAsync(refreshToken, authenticatedUserId);
 
             if (result == null)
                 return Unauthorized(new { message = "Refresh token is invalid or expired. Please log in again." });

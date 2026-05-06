@@ -9,6 +9,6 @@ namespace WebApplication1.Interface
         Task<bool> DeleteUserAsync(int userId);
         Task<bool> SaveVakifbankConsentAsync(int userId, string consentId);
         Task LogoutAsync(string? accessToken, string? refreshToken);
-        Task<(string AccessToken, string RefreshToken)?> RefreshAsync(string refreshToken);
+        Task<(string AccessToken, string RefreshToken)?> RefreshAsync(string refreshToken, int userId);
     }
 }

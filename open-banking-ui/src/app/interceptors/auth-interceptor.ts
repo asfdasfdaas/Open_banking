@@ -21,7 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         console.warn('Unauthorized request, session expired. Enforcing logout...', error);
 
-        // instantly log them out. No automatic refreshing.
+        // log them out
         authService.logout();
       }
       else if (error.status === 401) {
