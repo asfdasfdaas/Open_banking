@@ -2,7 +2,7 @@
 <app-chat></app-chat>
 <div class="flex flex-col min-h-screen bg-slate-50">
 
-<!--Nav bar-->
+  <!--Nav bar-->
   <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
@@ -15,7 +15,7 @@
         <div class="flex items-center gap-6 text-sm font-medium">
           <a (click)="navigate('/')" class="cursor-pointer hover:text-blue-400 transition-colors">Home</a>
 
-          @if (isLoggedIn) {
+          @if (authService.isLoggedIn$ | async) {
           <a (click)="navigate('/dashboard')" class="cursor-pointer text-blue-400 hover:text-blue-300 transition-colors">Dashboard</a>
           <a (click)="logout()" class="cursor-pointer text-red-400 hover:text-red-300 transition-colors bg-red-400/10 px-3 py-1.5 rounded-md">Logout</a>
           }
@@ -59,3 +59,30 @@
   </footer>
 
 </div>
+
+@if (authService.sessionPrompt$ | async) {
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 px-4">
+  <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+    <h2 class="text-xl font-semibold text-slate-900">Session Expiring Soon</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Your session will expire in <span class="font-semibold text-red-600">{{ authService.sessionCountdown$ | async }}</span> seconds.
+    </p>
+    <p class="mt-1 text-sm text-slate-600">
+      Continue to refresh your session, or let it expire and return to login.
+    </p>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button type="button"
+              class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              (click)="declineSession()">
+        Logout at Expiry
+      </button>
+      <button type="button"
+              class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+              (click)="continueSession()">
+        Continue Session
+      </button>
+    </div>
+  </div>
+</div>
+}

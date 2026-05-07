@@ -4,22 +4,20 @@ import { AuthService } from './services/auth';
 import { ToastComponent } from './components/toast/toast';
 import { ToastService } from './services/toast';
 import { ChatComponent } from './components/chat/chat';
-import { Subscription } from 'rxjs'; // 🚀 Import Subscription
-import { switchMap } from 'rxjs';
+import { Subscription, switchMap } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastComponent, ChatComponent],
+  imports: [RouterOutlet, ToastComponent, ChatComponent, AsyncPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App implements OnInit, OnDestroy {
+export class App implements OnInit{
   title = signal('open-banking-ui');
-  isLoggedIn = false;
-  private authSub!: Subscription;
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router,
     private toastService: ToastService
   ) { }
@@ -30,20 +28,9 @@ export class App implements OnInit, OnDestroy {
         if (!session || !session.isAuthenticated) {
           return this.authService.initializeSessionFlow(0);
         }
-
         return this.authService.initializeSessionFlow(session.remainingSeconds);
       })
     ).subscribe();
-
-    this.authSub = this.authService.isLoggedIn$.subscribe(status => {
-      this.isLoggedIn = status;
-    });
-  }
-
-  ngOnDestroy() {
-    if (this.authSub) {
-      this.authSub.unsubscribe();
-    }
   }
 
   navigate(path: string) {
@@ -56,5 +43,22 @@ export class App implements OnInit, OnDestroy {
     this.router.navigate(['/']);
 
     this.toastService.show('Logged out', 'success');
+  }
+
+  continueSession() {
+    this.authService.continueSession().subscribe((success) => {
+      if (success) {
+        this.toastService.show('Session extended', 'success');
+        return;
+      }
+
+      this.router.navigate(['/login']);
+      this.toastService.show('Session expired. Please login again.', 'error');
+    });
+  }
+
+  declineSession() {
+    this.authService.declineSession();
+    this.toastService.show('Session will end at token expiry.', 'success');
   }
 }

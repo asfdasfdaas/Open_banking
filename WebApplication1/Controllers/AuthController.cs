@@ -172,7 +172,7 @@ namespace WebApplication1.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddMinutes(15)
+                Expires = DateTime.UtcNow.AddMinutes(10)
             });
 
             Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions

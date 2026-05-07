@@ -1,7 +1,7 @@
 import { Router } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap, BehaviorSubject, map, catchError, of } from 'rxjs';
+import { Observable, tap, BehaviorSubject, map, catchError, of, switchMap } from 'rxjs';
 
 export interface SessionStatus {
   isAuthenticated: boolean;
@@ -26,6 +26,12 @@ export class AuthService {
   private readonly promptBeforeExpiryMs = 60_000; // 1 minute before expiry prompt
   private promptTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private expiryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
+  private sessionPromptSubject = new BehaviorSubject<boolean>(false);
+  private sessionCountdownSubject = new BehaviorSubject<number>(0);
+
+  public sessionPrompt$ = this.sessionPromptSubject.asObservable();
+  public sessionCountdown$ = this.sessionCountdownSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -35,10 +41,17 @@ export class AuthService {
 
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/login`, credentials).pipe(
-      tap(() => {
+      switchMap((response) => {
         // JWT is now in an HttpOnly cookie, so a successful login means authenticated.
         this.loggedInSubject.next(true);
-        this.startSessionTimers(15 * 60);
+        return this.checkSession().pipe(
+          tap((session) => {
+            if (session?.isAuthenticated) {
+              this.startSessionTimers(session.remainingSeconds);
+            }
+          }),
+          map(() => response)
+        );
       })
     );
   }
@@ -80,10 +93,16 @@ export class AuthService {
 
   refresh(): Observable<boolean> {
     return this.http.post(this.refreshUrl, {}).pipe(
-      map(() => true),
-      tap(() => {
+      switchMap(() => {
         this.loggedInSubject.next(true);
-        this.startSessionTimers(15 * 60);
+        return this.checkSession().pipe(
+          tap((session) => {
+            if (session?.isAuthenticated) {
+              this.startSessionTimers(session.remainingSeconds);
+            }
+          }),
+          map((session) => !!session?.isAuthenticated)
+        );
       }),
       catchError(() => {
         this.clearSessionTimers();
@@ -108,6 +127,15 @@ export class AuthService {
     return of(true);
   }
 
+  continueSession(): Observable<boolean> {
+    this.closeSessionPrompt();
+    return this.refresh();
+  }
+
+  declineSession(): void {
+    this.closeSessionPrompt();
+  }
+
   private startSessionTimers(remainingSeconds: number): void {
     this.clearSessionTimers();
 
@@ -115,12 +143,13 @@ export class AuthService {
     const promptDelay = Math.max(remainingMs - this.promptBeforeExpiryMs, 0);
 
     this.promptTimeoutId = setTimeout(() => {
-      this.handleSessionExtensionPrompt();
+      this.openSessionPrompt(Math.ceil(this.promptBeforeExpiryMs / 1000));
     }, promptDelay);
 
     this.expiryTimeoutId = setTimeout(() => {
+      this.closeSessionPrompt();
       this.logout();
-      this.router.navigate(['/']);
+      this.router.navigate(['/login']);
     }, remainingMs);
   }
 
@@ -134,21 +163,36 @@ export class AuthService {
       clearTimeout(this.expiryTimeoutId);
       this.expiryTimeoutId = null;
     }
+
+    this.closeSessionPrompt();
   }
 
-  private handleSessionExtensionPrompt(): void {
-    const shouldContinue = window.confirm(
-      'Your session is about to expire in under a minute. Continue session?'
-    );
+  private openSessionPrompt(seconds: number): void {
+    this.closeSessionPrompt();
+    this.sessionPromptSubject.next(true);
+    this.sessionCountdownSubject.next(seconds);
 
-    if (shouldContinue) {
-      this.refresh().subscribe((success) => {
-        if (!success) {
-          this.router.navigate(['/']);
+    this.countdownIntervalId = setInterval(() => {
+      const current = this.sessionCountdownSubject.value;
+      if (current <= 0) {
+        if (this.countdownIntervalId) {
+          clearInterval(this.countdownIntervalId);
         }
-      });
-      return;
+        this.sessionCountdownSubject.next(0);
+        return;
+      }
+
+      this.sessionCountdownSubject.next(current - 1);
+    }, 1000);
+  }
+
+  private closeSessionPrompt(): void {
+    if (this.countdownIntervalId) {
+      clearInterval(this.countdownIntervalId);
+      this.countdownIntervalId = null;
     }
 
+    this.sessionPromptSubject.next(false);
+    this.sessionCountdownSubject.next(0);
   }
 }
