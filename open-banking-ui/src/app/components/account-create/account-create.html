@@ -1,1 +1,71 @@
-<p>account-create works!</p>
+<div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+      Open a New Account
+    </h2>
+    <p class="mt-2 text-center text-sm text-slate-600">
+      Start managing your money today.
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-slate-100">
+
+      <form [formGroup]="createForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <div>
+          <label for="currencyCode" class="block text-sm font-medium text-slate-700">Account Currency</label>
+          <div class="mt-2">
+            <select id="currencyCode"
+                    formControlName="currencyCode"
+                    class="block w-full rounded-md border-0 py-2.5 pl-3 pr-10 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6">
+              <option value="TL">TL - Turkish Lira</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="balance" class="block text-sm font-medium text-slate-700">Initial Deposit Amount</label>
+          <div class="mt-2 relative rounded-md shadow-sm">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <span class="text-slate-500 sm:text-sm">$</span>
+            </div>
+            <input type="number"
+                   id="balance"
+                   formControlName="balance"
+                   min="0"
+                   class="block w-full rounded-md border-0 py-2.5 pl-7 pr-12 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                   placeholder="0.00">
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <span class="text-slate-500 sm:text-sm" id="price-currency">{{ createForm.get('currencyCode')?.value }}</span>
+            </div>
+          </div>
+          @if (createForm.get('balance')?.errors?.['min'] && createForm.get('balance')?.touched) {
+          <p class="mt-2 text-sm text-red-600">Initial deposit cannot be negative.</p>
+          }
+        </div>
+
+        <div class="flex gap-4 pt-4">
+          <button type="button"
+                  routerLink="/dashboard"
+                  class="flex w-full justify-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+            Cancel
+          </button>
+
+          <button type="submit"
+                  [disabled]="createForm.invalid || isSubmitting"
+                  class="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (isSubmitting) {
+            Opening Account...
+            } @else {
+            Open Account
+            }
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>

@@ -53,6 +53,10 @@ export class BankApiService {
     return this.http.get(`${this.baseUrl}/AccountList/${accountNumber}/transactions?startDate=${startDate}&endDate=${endDate}`);
   }
 
+  createAccount(accountData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/AccountList/create-account`, accountData, { withCredentials: true });
+  }
+
   downloadReceipt(accountNumber: string, transactionId: string, provider?: string): Observable<Blob> {
     return this.http.get(`${this.banks(provider)}/accounts/${encodeURIComponent(accountNumber)}/receipt/${encodeURIComponent(transactionId)}`, {
       responseType: 'blob'

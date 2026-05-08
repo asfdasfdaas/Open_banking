@@ -4,23 +4,10 @@ namespace WebApplication1.Models.DTOs
 {
     public class AccountCreateDTO
     {
-        [Required]
-        public String AccountNumber { get; set; } = string.Empty; //Hesap numarası
-
-        [Range(0, double.MaxValue, ErrorMessage = "Initial balance cannot be negative.")]
-        public decimal Balance { get; set; } //Hesap bakiyesi
-
         [Range(0, double.MaxValue)]
-        public decimal RemainingBalance { get; set; } //Kullanılabilir bakiye
+        public decimal Balance { get; set; } // Initial Deposit
 
         [Required]
-        [StringLength(26, MinimumLength = 26, ErrorMessage = "IBAN must be exactly 26 characters.")]
-        public string IBAN { get; set; } = string.Empty; //Uluslararası banka hesap numarası
-
-        [Required]
-        public string CurrencyCode { get; set; } = string.Empty; //Döviz kodu
-
-        [Required]
-        public int AccountType { get; set; } = 1; //Hesap tipi
+        public string CurrencyCode { get; set; } = string.Empty; // Currency
     }
 }

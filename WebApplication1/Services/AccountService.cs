@@ -32,7 +32,28 @@ namespace WebApplication1.Services
 
         public async Task<(AccountListDTO Dto, int Id)> CreateAccountAsync(AccountCreateDTO createDTO, int userId)
         {
-            var newAccount = createDTO.ToAccountFromCreateDTO();
+            var random = new Random();
+
+            string newAccountNumber = string.Empty;
+            for (int i = 0; i < 16; i++) newAccountNumber += random.Next(0, 10);
+
+            string ibanDigits = string.Empty;
+            for (int i = 0; i < 24; i++) ibanDigits += random.Next(0, 10);
+            string newIban = $"TR{ibanDigits}";
+
+            var newAccount = new Models.AccountList
+            {
+                UserId = userId,
+                AccountNumber = newAccountNumber,
+                IBAN = newIban,
+                Balance = createDTO.Balance,
+                RemainingBalance = createDTO.Balance, // Remaining balance starts equal to the initial deposit
+                CurrencyCode = createDTO.CurrencyCode,
+                AccountType = 1,           // Default to 1
+                AccountStatus = "A",       // "A" for Active
+                LastTransactionDate = DateTime.UtcNow,
+                ProviderName = "Internal"
+            };
             newAccount.UserId = userId;
 
             await _repo.CreateAsync(newAccount);
