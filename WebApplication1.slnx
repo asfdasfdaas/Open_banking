@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="WebApplication1.Tests/WebApplication1.Tests.csproj" Id="b4c81c8a-536b-4f53-8ad6-ea6c65ff8f46" />
   <Project Path="WebApplication1/WebApplication1.csproj" />
 </Solution>
