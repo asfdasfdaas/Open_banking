@@ -66,5 +66,69 @@ namespace WebApplication1.Tests
             // 4. Verify that the service actually called the database exactly one time
             mockRepo.Verify(repo => repo.GetUserAccountsAsync(testUserId), Times.Once);
         }
+
+        [Fact]
+        public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoAccountsExist()
+        {
+            // Arrange
+            int testUserId = 100;
+            var mockRepo = new Mock<IAccountRepository>();
+
+            mockRepo.Setup(repo => repo.GetUserAccountsAsync(testUserId))
+                    .ReturnsAsync(new List<AccountList>()); // Return an empty list
+
+            var accountService = new AccountService(mockRepo.Object);
+            // Act
+            var result = await accountService.GetAllAsync(testUserId);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result); // Ensure the result is an empty collection
+
+            mockRepo.Verify(repo => repo.GetUserAccountsAsync(testUserId), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task GetBtIdAsync_ShouldReturnMappedDto_WhenAccountExists()
+        {
+            // Arrange
+            int testUserId = 99;
+            int testAccountId = 1;
+            var mockRepo = new Mock<IAccountRepository>();
+            var fakeAccount = new AccountList { Id = testAccountId, UserId = testUserId, AccountNumber = "123456789", Balance = 1500m, CurrencyCode = "TRY" };
+
+            mockRepo.Setup(repo => repo.GetByIdAsync(testAccountId, testUserId))
+                    .ReturnsAsync(fakeAccount);
+
+            var accountService = new AccountService(mockRepo.Object);
+
+            // Act
+            var result = await accountService.GetByIdAsync(testAccountId, testUserId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(fakeAccount.AccountNumber, result.AccountNumber);
+            Assert.Equal(fakeAccount.Balance, result.Balance);
+            Assert.Equal(fakeAccount.CurrencyCode, result.CurrencyCode);
+
+            mockRepo.Verify(repo => repo.GetByIdAsync(testAccountId, testUserId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ShouldReturnNull_WhenAccountDoesNotExist()
+        {
+            // Arrange
+            int testUserId = 99;
+            int testAccountId = 999; // Assume this ID does not exist
+            var mockRepo = new Mock<IAccountRepository>();
+            mockRepo.Setup(repo => repo.GetByIdAsync(testAccountId, testUserId))
+                    .ReturnsAsync((AccountList)null); // Return null to simulate not found
+            var accountService = new AccountService(mockRepo.Object);
+            // Act
+            var result = await accountService.GetByIdAsync(testAccountId, testUserId);
+            // Assert
+            Assert.Null(result); // Expecting null when account is not found
+            mockRepo.Verify(repo => repo.GetByIdAsync(testAccountId, testUserId), Times.Once);
+        }
     }
 }
