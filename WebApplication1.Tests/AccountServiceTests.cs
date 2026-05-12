@@ -12,6 +12,7 @@ namespace WebApplication1.Tests
 {
     public class AccountServiceTests
     {
+        // GetAllAsync tests
         [Fact]
         public async Task GetAllAsync_ShouldReturnMappedDtos_WhenAccountsExist()
         {
@@ -88,6 +89,7 @@ namespace WebApplication1.Tests
         }
 
 
+        // GetByIdAsync tests
         [Fact]
         public async Task GetBtIdAsync_ShouldReturnMappedDto_WhenAccountExists()
         {
