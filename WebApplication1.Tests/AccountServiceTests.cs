@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using WebApplication1.Services;       // Where AccountService lives
 using WebApplication1.Interface;      // Where IAccountRepository lives
 using WebApplication1.Models;         // Where AccountList lives
-using WebApplication1.Models.DTOs;    // Where AccountListDTO lives
+using WebApplication1.Models.DTOs;
+using Microsoft.EntityFrameworkCore.Storage;    // Where AccountListDTO lives
 
 namespace WebApplication1.Tests
 {
@@ -131,6 +132,68 @@ namespace WebApplication1.Tests
             // Assert
             Assert.Null(result); // Expecting null when account is not found
             mockRepo.Verify(repo => repo.GetByIdAsync(testAccountId, testUserId), Times.Once);
+        }
+
+        [Fact]
+        public async Task TransferInternalAsync_ShouldReturnTrue()
+        {
+            // Arrange
+            int testUserId = 99;
+            var startOfToday = DateTime.UtcNow.Date;
+            TransferDTO testTransferDTO = new TransferDTO {
+                SenderAccountNumber="123",
+                ReceiverAccountNumber = "222",
+                Amount=500.00m,
+                Description ="Test transfer from 123 to 222 fro 500"};
+
+            var fakeSenderAccount = new AccountList { Id = 1, UserId = testUserId, AccountNumber = "123", Balance = 1500m, RemainingBalance = 1500m, CurrencyCode = "TRY", ProviderName = "Internal" };
+            var fakeRecieverAccount = new AccountList { Id = 2, UserId = 2, AccountNumber = "222", Balance = 1000m, RemainingBalance = 1000m, CurrencyCode = "TRY", ProviderName = "Internal" };
+
+            var mockRepo = new Mock<IAccountRepository>();
+
+            mockRepo.Setup(repo => repo.GetAccountForUpdateAsync(testTransferDTO.SenderAccountNumber, testUserId))
+                    .ReturnsAsync(fakeSenderAccount);
+
+            mockRepo.Setup(repo => repo.GetAccountForUpdateAsync(testTransferDTO.ReceiverAccountNumber,null))
+                    .ReturnsAsync(fakeRecieverAccount);
+
+            mockRepo.Setup(repo => repo.GetTotalOutgoingTodayAsync(fakeSenderAccount.Id, startOfToday))
+                    .ReturnsAsync(0.00m);
+
+
+            var mockTransaction = new Mock<IDbContextTransaction>();
+
+            mockTransaction.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>()))
+                            .Returns(Task.CompletedTask);
+
+            mockTransaction.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>()))
+                            .Returns(Task.CompletedTask);
+
+            mockRepo.Setup(repo => repo.BeginTransactionAsync())
+                    .ReturnsAsync(mockTransaction.Object);
+
+            var accountService = new AccountService(mockRepo.Object);
+
+
+            // Act
+
+            var result = await accountService.TransferInternalAsync(testUserId, testTransferDTO);
+
+
+            // Assert
+
+            Assert.True(result);
+
+            Assert.Equal(1000m, fakeSenderAccount.Balance);
+            Assert.Equal(1000m, fakeSenderAccount.RemainingBalance);
+
+            Assert.Equal(1500m, fakeRecieverAccount.Balance);
+            Assert.Equal(1500m, fakeRecieverAccount.RemainingBalance);
+
+            mockRepo.Verify(repo => repo.SaveAsync(), Times.Once);
+            mockTransaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+            mockTransaction.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }
