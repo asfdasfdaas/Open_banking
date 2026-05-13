@@ -1,7 +1,8 @@
+using System.Security.Principal;
 using WebApplication1.Interface;
 using WebApplication1.Mapper;
+using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
-using System.Security.Principal;
 
 namespace WebApplication1.Services
 {
@@ -63,7 +64,102 @@ namespace WebApplication1.Services
 
         public async Task<bool> TransferInternalAsync(int userId, TransferDTO transferDto)
         {
-            return await _repo.TransferMoneyInternalAsync(userId, transferDto);
+            // if the app crashes at any point the database will automatically roll back to its original state
+            await using var dbTransaction = await _repo.BeginTransactionAsync();
+
+            try
+            {
+                decimal dailyTransferLimit = 5000.00m;
+                var startOfToday = DateTime.UtcNow.Date;
+
+                // fetch and validate sender
+                var senderAccount = await _repo.GetAccountForUpdateAsync(transferDto.SenderAccountNumber, userId);
+
+                if (senderAccount == null || senderAccount.ProviderName != "Internal")
+                    throw new Exception("Invalid sender account. Ensure it is an internal account that belongs to you.");
+
+                // fetch and validate receiver
+                var receiverAccount = await _repo.GetAccountForUpdateAsync(transferDto.ReceiverAccountNumber);
+
+                if (receiverAccount == null || receiverAccount.ProviderName != "Internal")
+                    throw new Exception("Invalid receiver account. Destination must be an active internal account.");
+
+                // business rules validation
+                var outgoingTransfersToday = await _repo.GetTotalOutgoingTodayAsync(senderAccount.Id, startOfToday);
+                Console.WriteLine($"Total outgoing transfers today for account {senderAccount.AccountNumber}: {outgoingTransfersToday:C}");
+
+                decimal totalSpentToday = Math.Abs(outgoingTransfersToday);
+
+                if (totalSpentToday + transferDto.Amount > dailyTransferLimit)
+                {
+                    decimal remainingLimit = dailyTransferLimit - totalSpentToday;
+                    throw new Exception($"Daily transfer limit exceeded. You can only transfer up to {remainingLimit:C} more today.");
+                }
+
+                if (transferDto.Amount <= 0)
+                    throw new Exception("Transfer amount must be greater than zero.");
+
+                if (senderAccount.Id == receiverAccount.Id)
+                    throw new Exception("You cannot transfer money to the same account.");
+
+                if (senderAccount.CurrencyCode != receiverAccount.CurrencyCode)
+                    throw new Exception($"Currency mismatch. Cannot transfer {senderAccount.CurrencyCode} to a {receiverAccount.CurrencyCode} account without FX conversion.");
+
+                if (senderAccount.RemainingBalance < transferDto.Amount)
+                    throw new Exception("Insufficient funds.");
+
+                senderAccount.Balance -= transferDto.Amount;
+                senderAccount.RemainingBalance -= transferDto.Amount;
+
+                receiverAccount.Balance += transferDto.Amount;
+                receiverAccount.RemainingBalance += transferDto.Amount;
+
+                var timestamp = DateTime.UtcNow;
+
+                // the negative transaction for the sender
+                var senderTx = new AccountTransaction
+                {
+                    AccountListId = senderAccount.Id,
+                    TransactionId = Guid.NewGuid().ToString(), // Generate a unique receipt ID
+                    TransactionName = "Outgoing Transfer",
+                    Description = string.IsNullOrWhiteSpace(transferDto.Description) ? $"Transfer to {receiverAccount.AccountNumber}" : transferDto.Description,
+                    TransactionType = "Outgoing",
+                    Amount = -transferDto.Amount,
+                    Balance = senderAccount.Balance, // The snapshot of their balance after the transfer
+                    TransactionDate = timestamp,
+                    CurrencyCode = senderAccount.CurrencyCode
+                };
+
+                // the positive transaction for the receiver
+                var receiverTx = new AccountTransaction
+                {
+                    AccountListId = receiverAccount.Id,
+                    TransactionId = Guid.NewGuid().ToString(),
+                    TransactionName = "Incoming Transfer",
+                    Description = string.IsNullOrWhiteSpace(transferDto.Description) ? $"Transfer from {senderAccount.AccountNumber}" : transferDto.Description,
+                    TransactionType = "Incoming",
+                    Amount = transferDto.Amount,
+                    Balance = receiverAccount.Balance,
+                    TransactionDate = timestamp,
+                    CurrencyCode = receiverAccount.CurrencyCode
+                };
+
+                // queue the new transactions to be saved
+                await _repo.AddTransactionsAsync(new[] { senderTx, receiverTx });
+
+                // save & commit
+                await _repo.SaveAsync();
+                await dbTransaction.CommitAsync();
+
+                return true;
+            }
+            catch (Exception)
+            {
+
+                await dbTransaction.RollbackAsync();
+
+                throw;
+            }
         }
 
         public async Task<bool> UpdateAccountAsync(int id, int userId, AccountUpdateDTO updateDTO)

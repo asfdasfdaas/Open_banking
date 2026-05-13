@@ -1,4 +1,5 @@
-﻿using WebApplication1.Models;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Interface
@@ -19,6 +20,9 @@ namespace WebApplication1.Interface
         Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto);
         Task<AccountList?> GetByAccountNumberAsync(string accountNumber);
         Task<decimal> GetTotalOutgoingTodayAsync(int accountId, DateTime startOfToday);
+        Task<IDbContextTransaction> BeginTransactionAsync();
+        Task<AccountList?> GetAccountForUpdateAsync(string accountNumber, int? userId = null);
+        Task AddTransactionsAsync(IEnumerable<AccountTransaction> transactions);
     }
 }
 

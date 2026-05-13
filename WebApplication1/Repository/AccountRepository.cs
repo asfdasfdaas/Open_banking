@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,31 @@ namespace WebApplication1.Repository
         {
             await _db.AccountTransactions.AddRangeAsync(transactions);
             await SaveAsync();
+        }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _db.Database.BeginTransactionAsync();
+        }
+
+        public async Task<AccountList?> GetAccountForUpdateAsync(string accountNumber, int? userId = null)
+        {
+            //if has user id look for sender
+            //else look for reciever
+            if (userId.HasValue)
+            {
+                return await _db.AccountLists
+                    .FromSqlInterpolated($"SELECT * FROM AccountLists WITH (UPDLOCK) WHERE AccountNumber = {accountNumber} AND UserId = {userId.Value}")
+                    .FirstOrDefaultAsync();
+            }
+            return await _db.AccountLists
+                .FromSqlInterpolated($"SELECT * FROM AccountLists WITH (UPDLOCK) WHERE AccountNumber = {accountNumber}")
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task AddTransactionsAsync(IEnumerable<AccountTransaction> transactions)
+        {
+            await _db.AccountTransactions.AddRangeAsync(transactions);
         }
 
         public async Task<bool> TransferMoneyInternalAsync(int userId, TransferDTO transferDto)
