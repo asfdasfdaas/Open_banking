@@ -146,6 +146,8 @@ namespace WebApplication1.Tests
                 Amount=500.00m,
                 Description ="Test transfer from 123 to 222 fro 500"};
 
+            IEnumerable<AccountTransaction> capturedTransactions = null;
+
             var fakeSenderAccount = new AccountList { Id = 1, UserId = testUserId, AccountNumber = "123", Balance = 1500m, RemainingBalance = 1500m, CurrencyCode = "TRY", ProviderName = "Internal" };
             var fakeRecieverAccount = new AccountList { Id = 2, UserId = 2, AccountNumber = "222", Balance = 1000m, RemainingBalance = 1000m, CurrencyCode = "TRY", ProviderName = "Internal" };
 
@@ -172,6 +174,14 @@ namespace WebApplication1.Tests
             mockRepo.Setup(repo => repo.BeginTransactionAsync())
                     .ReturnsAsync(mockTransaction.Object);
 
+            
+            mockRepo.Setup(repo => repo.AddTransactionsAsync(It.IsAny<IEnumerable<AccountTransaction>>()))
+                    .Callback<IEnumerable<AccountTransaction>>(txs =>
+                    {
+                        capturedTransactions = txs;
+                    })
+                    .Returns(Task.CompletedTask);
+
             var accountService = new AccountService(mockRepo.Object);
 
 
@@ -189,6 +199,25 @@ namespace WebApplication1.Tests
 
             Assert.Equal(1500m, fakeRecieverAccount.Balance);
             Assert.Equal(1500m, fakeRecieverAccount.RemainingBalance);
+
+            Assert.NotNull(capturedTransactions);
+            var txList = capturedTransactions.ToList();
+
+            Assert.Equal(2, txList.Count);
+
+            // Sender transaction
+            var senderTx = txList.Single(t => t.TransactionType == "Outgoing");
+            Assert.Equal(fakeSenderAccount.Id, senderTx.AccountListId);
+            Assert.Equal(-500m, senderTx.Amount);
+            Assert.Equal(1000m, senderTx.Balance);
+            Assert.Equal("TRY", senderTx.CurrencyCode);
+
+            // Reciever transaction
+            var receiverTx = txList.Single(t => t.TransactionType == "Incoming");
+            Assert.Equal(fakeRecieverAccount.Id, receiverTx.AccountListId);
+            Assert.Equal(500m, receiverTx.Amount);
+            Assert.Equal(1500m, receiverTx.Balance);
+            Assert.Equal("TRY", receiverTx.CurrencyCode);
 
             mockRepo.Verify(repo => repo.SaveAsync(), Times.Once);
             mockTransaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
