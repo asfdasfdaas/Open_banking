@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { BankApiService } from '../../services/bank-api';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
+import { Router,RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IbanPipe } from '../../pipes/iban-pipe';
 import { ToastService } from '../../services/toast';
@@ -12,7 +12,7 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, CommonModule, IbanPipe, BaseChartDirective],
+  imports: [FormsModule, CommonModule, IbanPipe, BaseChartDirective,RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
