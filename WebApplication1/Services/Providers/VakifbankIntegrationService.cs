@@ -43,26 +43,10 @@ namespace WebApplication1.Services.Providers
                 { "resource", "sandbox" }
             };
 
-            var content = new FormUrlEncodedContent(requestBody);
-
-            var response = await _httpClient.PostAsync("/oauth2/token", content);
-            response.EnsureSuccessStatusCode(); // Crashes in a 400 or 401
-
-            var jsonString = await response.Content.ReadAsStringAsync();
-
-            var tokenData = JsonSerializer.Deserialize<TokenResponse>(jsonString);
-
-            var newToken = tokenData!.AccessToken;
-
-            var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(50));
-
-            _cache.Set(cacheKey, newToken, cacheOptions);
-
-            return newToken;
+            return await ReturnToken(requestBody,cacheKey);
         }
 
-        public async Task<String> GetClientCKeyAsync()
+        public async Task<string> GetClientCKeyAsync()
         {
             string cacheKey = "VakifbankCCToken";
 
@@ -79,6 +63,11 @@ namespace WebApplication1.Services.Providers
                 { "scope", "public oob" }
             };
 
+            return await ReturnToken(requestBody, cacheKey);
+        }
+
+        private async Task<string> ReturnToken(Dictionary<string,string> requestBody, string cacheKey)
+        {
             var content = new FormUrlEncodedContent(requestBody);
 
             var response = await _httpClient.PostAsync("/oauth2/token", content);
