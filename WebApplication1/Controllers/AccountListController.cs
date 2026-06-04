@@ -13,7 +13,7 @@ namespace WebApplication1.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountListController : ControllerBase
+    public class AccountListController : BaseController
     {
         private readonly IAccountService _accountService;
 
@@ -26,7 +26,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<IEnumerable<AccountListDTO>>> GetAll()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
             
             var accountDtos = await _accountService.GetAllAsync(userId);
@@ -38,7 +37,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<AccountListDTO>> GetById([FromRoute]int id)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
             
             var accountDto = await _accountService.GetByIdAsync(id, userId);
@@ -54,7 +52,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<AccountListDTO>> CreateAccount([FromBody] AccountCreateDTO createDTO)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
             
             var result = await _accountService.CreateAccountAsync(createDTO, userId);
@@ -68,7 +65,6 @@ namespace WebApplication1.Controllers
         {
             // Identify the user making the request from their secure JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
 
             try
@@ -93,7 +89,6 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> UpdateAccount([FromRoute] int id, [FromBody] AccountUpdateDTO updateDTO)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
             
             var updated = await _accountService.UpdateAccountAsync(id, userId, updateDTO);
@@ -110,7 +105,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<AccountListDTO>> DeleteAccount([FromRoute] int id) 
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
             
             var deleted = await _accountService.DeleteAccountAsync(id, userId);
@@ -127,7 +121,6 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> GetTransactions(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
 
             var transactionDtos = await _accountService.GetTransactionsAsync(userId, accountNumber, startDate, endDate);
@@ -142,7 +135,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<DashboardSummaryDto>> GetDashboardSummary(string accountNumber, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized();
             var userId = int.Parse(userIdClaim.Value);
 
             var summary = await _accountService.GetDashboardSummaryAsync(userId, accountNumber, startDate, endDate);
@@ -170,6 +162,25 @@ namespace WebApplication1.Controllers
             catch (UnauthorizedAccessException ex)
             {
                 return Forbid(ex.Message);
+            }
+        }
+    }
+    [Authorize]
+    [ApiController]
+    public abstract class BaseController : ControllerBase
+    {
+        protected int UserId
+        {
+            get
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+                if (userIdClaim == null)
+                {
+                    throw new InvalidOperationException("The JWT token does not contain a NameIdentifier claim.");
+                }
+
+                return int.Parse(userIdClaim.Value);
             }
         }
     }
