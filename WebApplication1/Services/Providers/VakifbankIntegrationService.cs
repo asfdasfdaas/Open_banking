@@ -331,21 +331,7 @@ namespace WebApplication1.Services.Providers
 
             var token = await GetClientCKeyAsync();
 
-
-            var payload = new Dictionary<string, string>();
-
-            if (!string.IsNullOrWhiteSpace(cityCode))
-            {
-                payload.Add("CityCode", cityCode);
-            }
-            if (!string.IsNullOrWhiteSpace(districtCode))
-            {
-                payload.Add("BankDistrictCode", districtCode);
-            }
-
-            var jsonString = JsonSerializer.Serialize(payload);
-            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-
+            StringContent jsonContent = await AtmBranchListFunc(cityCode, districtCode);
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankBranchList")
             {
@@ -401,23 +387,9 @@ namespace WebApplication1.Services.Providers
 
         public async Task<ATMListResponse> GetATMListAsync(string? cityCode = null, string? districtCode = null)
         {
-
             var token = await GetClientCKeyAsync();
 
-
-            var payload = new Dictionary<string, string>();
-
-            if (!string.IsNullOrWhiteSpace(cityCode))
-            {
-                payload.Add("CityCode", cityCode);
-            }
-            if (!string.IsNullOrWhiteSpace(districtCode))
-            {
-                payload.Add("DistrictCode", districtCode); 
-            }
-
-            var jsonString = JsonSerializer.Serialize(payload);
-            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            StringContent jsonContent = await AtmBranchListFunc(cityCode, districtCode);
 
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/vakifbankATMList")
@@ -438,6 +410,26 @@ namespace WebApplication1.Services.Providers
 
             var resultData = JsonSerializer.Deserialize<ATMListResponse>(responseJson, options);
             return resultData!;
+        }
+
+        private async Task<StringContent> AtmBranchListFunc(string cityCode, string districtCode)
+        {
+
+
+            var payload = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(cityCode))
+            {
+                payload.Add("CityCode", cityCode);
+            }
+            if (!string.IsNullOrWhiteSpace(districtCode))
+            {
+                payload.Add("DistrictCode", districtCode);
+            }
+
+            var jsonString = JsonSerializer.Serialize(payload);
+            var jsonContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            return jsonContent;
         }
 
         public async Task<CityListResponse> GetCityListAsync()
